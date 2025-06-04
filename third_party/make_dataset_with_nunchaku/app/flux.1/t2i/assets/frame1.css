@@ -1,0 +1,4 @@
+.gradio-container {
+    max-width: 640px !important;
+    margin: auto; /* Centers the element horizontally */
+}

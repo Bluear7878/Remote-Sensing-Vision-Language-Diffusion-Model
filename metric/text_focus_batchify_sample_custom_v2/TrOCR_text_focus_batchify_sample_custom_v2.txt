@@ -1,0 +1,320 @@
+Image: image012.jpg
+Predicted label: T
+Ground truth label: ARSENAL
+
+Image: image006.jpg
+Predicted label: 
+Ground truth label: IMPERIAL COLLEGE LONDON
+
+Image: image055.jpg
+Predicted label: O
+Ground truth label: BMW
+
+Image: image046.jpg
+Predicted label: AMEL
+Ground truth label: WEST HAM UNITED
+
+Image: image010.jpg
+Predicted label: @
+Ground truth label: ACM 1899
+
+Image: image062.jpg
+Predicted label: DA
+Ground truth label: WELCOME TO HISTORIC Battery Point
+
+Image: image038.jpg
+Predicted label: 7
+Ground truth label: SOUTHAMPTON PUBLICK HOUSE BURTON IPA
+
+Image: image064.jpg
+Predicted label: CASHIS
+Ground truth label: RESTAURANT & BAR SINGH'S CARIBBEAN CUISINE
+
+Image: image053.jpg
+Predicted label: 2
+Ground truth label: DENVER BEER CO.
+
+Image: image045.jpg
+Predicted label: AKE
+Ground truth label: NANI
+
+Image: image030.jpg
+Predicted label: The
+Ground truth label: JARRETT
+
+Image: image066.jpg
+Predicted label: CAMEL
+Ground truth label: FLYING HORSES AMERICA'S OLDEST CAROUSEL
+
+Image: image011.jpg
+Predicted label: CIGARETTES
+Ground truth label: WEST HAM UNITED
+
+Image: image036.jpg
+Predicted label: 2
+Ground truth label: STUBHUB 12
+
+Image: image077.jpg
+Predicted label: @
+Ground truth label: KIA MOTORS
+
+Image: image028.jpg
+Predicted label: C
+Ground truth label: TORRES 9 CHELSEA FOOTBALL CLUB
+
+Image: image019.jpg
+Predicted label: 13
+Ground truth label: BALLACK 13
+
+Image: image022.jpg
+Predicted label: O
+Ground truth label: CHELSEA FOOTBALL CLUB
+
+Image: image067.jpg
+Predicted label: TESTS - DOMESTIC
+Ground truth label: Le Grenier à Pain
+
+Image: image079.jpg
+Predicted label: HOW
+Ground truth label: COBRA SHOW THAILAND
+
+Image: image042.jpg
+Predicted label: LOW
+Ground truth label: FRIENDSHIP 1st. TOTTENHAM
+
+Image: image018.jpg
+Predicted label: 4 3 2
+Ground truth label: BAKER 32
+
+Image: image003.jpg
+Predicted label: LEALDE
+Ground truth label: BALLYS
+
+Image: image005.jpg
+Predicted label: CAM
+Ground truth label: THE DAILY GRIND KETCHUP
+
+Image: image008.jpg
+Predicted label: 23
+Ground truth label: ARSHAVIN 23 Jersey 777
+
+Image: image051.jpg
+Predicted label: CAMEL
+Ground truth label: BRIDGESTONE POTENZA
+
+Image: image058.jpg
+Predicted label: LO
+Ground truth label: CHATHAM-KENT POLICE To Serve and Protect
+
+Image: image074.jpg
+Predicted label: PERCELL
+Ground truth label: handmade chocolates aishahaleyes.blogspot.com
+
+Image: image072.jpg
+Predicted label: 1.0
+Ground truth label: POLICE STATION
+
+Image: image048.jpg
+Predicted label: (素素)
+Ground truth label: MULTIPACK Heinz BAKED BEANZ
+
+Image: image076.jpg
+Predicted label: CAMEL
+Ground truth label: STARBUCKS COFFEE
+
+Image: image026.jpg
+Predicted label: 16
+Ground truth label: ARTETA 6
+
+Image: image007.jpg
+Predicted label: C
+Ground truth label: adcademy entracne 1878 NIL SATIS NISI OPTIMUM Everton
+
+Image: image002.jpg
+Predicted label: SEASONES
+Ground truth label: SEACREST BEACH
+
+Image: image014.jpg
+Predicted label: 4 14.4
+Ground truth label: ARSENAL WALCOTT 14
+
+Image: image033.jpg
+Predicted label: LIGHT MENTHOL 100 FT- FILTER
+Ground truth label: IL MERCATO
+
+Image: image009.jpg
+Predicted label: 420
+Ground truth label: BIERHOFF 20
+
+Image: image039.jpg
+Predicted label: (1.5)
+Ground truth label: LUNDEKVAM 5
+
+Image: image071.jpg
+Predicted label: LIGHTS
+Ground truth label: CHINESE FOOD OPEN EAT IN TAKE OUT
+
+Image: image029.jpg
+Predicted label: FOR
+Ground truth label: CHELSEA FOOTBALL CLUB
+
+Image: image034.jpg
+Predicted label: COPY
+Ground truth label: VACATION 25 DOLLARS VINYL
+
+Image: image044.jpg
+Predicted label: (C)
+Ground truth label: WEST HAM UNITED
+
+Image: image073.jpg
+Predicted label: O
+Ground truth label: SEOUL GARDEN THE TABLE BARBEQUE PEOPLE
+
+Image: image054.jpg
+Predicted label: CAMEL
+Ground truth label: AFCEA NOVA NAVAL IT DAY
+
+Image: image020.jpg
+Predicted label: C
+Ground truth label: STARBUCKS COFFEE
+
+Image: image015.jpg
+Predicted label: 16
+Ground truth label: ARTETA 6
+
+Image: image023.jpg
+Predicted label: 45
+Ground truth label: ESSIEN 5
+
+Image: image043.jpg
+Predicted label: O
+Ground truth label: The way it's nVIDIA meant to be played
+
+Image: image069.jpg
+Predicted label: CAMEL
+Ground truth label: KOLIND KORESKOLE
+
+Image: image068.jpg
+Predicted label: ENOBIOLOGIA
+Ground truth label: £10,000 BUSINESS INVEST
+
+Image: image052.jpg
+Predicted label: CAMEL
+Ground truth label: Tokyo Disneyland
+
+Image: image024.jpg
+Predicted label: 426
+Ground truth label: TERRY 26
+
+Image: image063.jpg
+Predicted label: COPY
+Ground truth label: OLDTOWN WHITE COFFEE OLDTOWN WHITE COFFEE
+
+Image: image016.jpg
+Predicted label: AOZ
+Ground truth label: JOACHIM 12
+
+Image: image050.jpg
+Predicted label: Test WEISSE
+Ground truth label: Lest We FoRGet
+
+Image: image031.jpg
+Predicted label: AMERICA
+Ground truth label: GEMBIRA LOKA
+
+Image: image041.jpg
+Predicted label: TAMEL
+Ground truth label: START FINISH
+
+Image: image061.jpg
+Predicted label: A
+Ground truth label: CROCODILES NO SWIMMING
+
+Image: image078.jpg
+Predicted label: LORO
+Ground truth label: halal STAR SNACK TAGINE
+
+Image: image056.jpg
+Predicted label: MORRIS
+Ground truth label: HUTCHINSON
+
+Image: image037.jpg
+Predicted label: 20
+Ground truth label: V. PERSIE 20 MANCHESTER UNITED
+
+Image: image049.jpg
+Predicted label: OF
+Ground truth label: WIGAN 1932 ATHLETIC WEST BROMWICH ALBION
+
+Image: image032.jpg
+Predicted label: DAMILON
+Ground truth label: AVILON Celebrating Life!
+
+Image: image001.jpg
+Predicted label: A
+Ground truth label: RONALDO 7
+
+Image: image059.jpg
+Predicted label: (
+Ground truth label: SCOTT's FAMILY ITALIAN CUSINE & BAR
+
+Image: image070.jpg
+Predicted label: Marlboro
+Ground truth label: North Union WILDCATS
+
+Image: image040.jpg
+Predicted label: (
+Ground truth label: ALLAHABAD UNIVERSITY
+
+Image: image047.jpg
+Predicted label: CAMEL
+Ground truth label: WIGAN 1932 ATHLETIC
+
+Image: image025.jpg
+Predicted label: HOMO
+Ground truth label: DONOVAN 9
+
+Image: image017.jpg
+Predicted label: 4 16 6
+Ground truth label: KNIGHT 16
+
+Image: image080.jpg
+Predicted label: Exposure drop
+Ground truth label: Frikkie du TOit Safaris
+
+Image: image075.jpg
+Predicted label: CAMBRIDGE NOMOSIS
+Ground truth label: Smooth Soft Centre DAIRY MILK Chocolate Mousse
+
+Image: image004.jpg
+Predicted label: C
+Ground truth label: Carp Team eBIZU
+
+Image: image057.jpg
+Predicted label: C
+Ground truth label: THE SCOTTISH SALMON COMPANY
+
+Image: image021.jpg
+Predicted label: C
+Ground truth label: SAMSUNG mobile CHELSEA FOOTBALL CLUB
+
+Image: image027.jpg
+Predicted label: C
+Ground truth label: CHELSEA FOOTBALL CLUB
+
+Image: image013.jpg
+Predicted label: CAMEL
+Ground truth label: LE GROVE 1
+
+Image: image065.jpg
+Predicted label: C
+Ground truth label: MICHELIN MICHELIN
+
+Image: image035.jpg
+Predicted label: (SUB
+Ground truth label: NEWCASTLE UNITED
+
+Image: image060.jpg
+Predicted label: CAMEL
+Ground truth label: MAPLES EST. 2011 TAVERN
+

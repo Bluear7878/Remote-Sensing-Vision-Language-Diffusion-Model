@@ -1,0 +1,31 @@
+[build-system]
+requires = [
+    "setuptools",
+    "torch>=2.5",
+    "wheel",
+    "ninja",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["nunchaku"]
+
+[tool.ruff]
+line-length = 140
+
+[tool.ruff.lint]
+select = ["E", "W", "F"]
+ignore = ["F401"]
+
+[project]
+dynamic = ["version"]
+name = "nunchaku"
+dependencies = [
+    "diffusers>=0.32.2",
+    "transformers",
+    "accelerate",
+    "sentencepiece",
+    "protobuf",
+    "huggingface_hub",
+]
+requires-python = ">=3.10"

@@ -1,0 +1,16 @@
+[submodule "third_party/cutlass"]
+	path = third_party/cutlass
+	url = https://github.com/NVIDIA/cutlass.git
+[submodule "third_party/json"]
+	path = third_party/json
+	url = https://github.com/nlohmann/json.git
+[submodule "third_party/mio"]
+	path = third_party/mio
+	url = https://github.com/vimpunk/mio.git
+[submodule "third_party/spdlog"]
+	path = third_party/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "third_party/Block-Sparse-Attention"]
+	path = third_party/Block-Sparse-Attention
+	url = https://github.com/sxtyzhangzk/Block-Sparse-Attention.git
+	branch = nunchaku

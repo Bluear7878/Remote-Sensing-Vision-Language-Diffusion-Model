@@ -1,0 +1,8 @@
+# additional requirements for testing
+pytest
+datasets
+torchmetrics
+mediapipe
+controlnet_aux
+peft
+git+https://github.com/asomoza/image_gen_aux.git

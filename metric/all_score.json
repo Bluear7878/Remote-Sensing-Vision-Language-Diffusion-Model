@@ -1,0 +1,50 @@
+{
+    "PSNR": 22.56453514099121,
+    "SSIM": 0.5951710708439351,
+    "LPIPS": 0.37014138232916594,
+    "MANIQA": 0.643279870781116,
+    "MUSIQA": 69.59551072120667,
+    "CLIP_IQA": 0.813690185546875,
+    "LLaVA_text_focus_batchify_sample_custom_v2.txt": {
+        "precision": 88.71794871794872,
+        "recall": 73.61702127659574,
+        "f1_score": 80.46511627906976,
+        "accuracy": 67.31517509727627,
+        "ned": 63.20335941808172
+    },
+    "TrOCR_text_focus_batchify_sample_custom_v2.txt": {
+        "precision": 15.384615384615385,
+        "recall": 1.702127659574468,
+        "f1_score": 3.0651340996168583,
+        "accuracy": 1.556420233463035,
+        "ned": 90.79898783769434
+    },
+    "Got_text_focus_batchify_sample_custom_v2.txt": {
+        "precision": 67.6923076923077,
+        "recall": 40.93023255813954,
+        "f1_score": 51.01449275362319,
+        "accuracy": 34.24124513618677,
+        "ned": 64.79328706395077
+    },
+    "OpenOCR_text_focus_batchify_sample_custom_v2.txt": {
+        "precision": 65.68627450980392,
+        "recall": 71.65775401069519,
+        "f1_score": 68.54219948849105,
+        "accuracy": 52.14007782101168,
+        "ned": 53.395993715538324
+    },
+    "parseq_text_focus_batchify_sample_custom_v2.txt": {
+        "precision": 31.25,
+        "recall": 2.0325203252032518,
+        "f1_score": 3.8167938931297707,
+        "accuracy": 1.9455252918287937,
+        "ned": 91.96319110018469
+    },
+    "Ours_text_focus_batchify_sample_custom_v2.txt": {
+        "precision": 85.13513513513513,
+        "recall": 84.375,
+        "f1_score": 84.75336322869956,
+        "accuracy": 73.54085603112841,
+        "ned": 32.17311996454064
+    }
+}
