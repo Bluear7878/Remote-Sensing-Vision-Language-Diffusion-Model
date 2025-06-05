@@ -24,7 +24,6 @@ import re
 import torch
 from functools import partial
 
-
 try:
     import xformers
     import xformers.ops
@@ -560,6 +559,7 @@ class LightGLVUNet(UNetModel):
             raise NotImplementedError
 
         project_channels = [int(c * project_channel_scale) for c in project_channels]
+        self.cache_threshold = 0.1
 
         self.project_modules = nn.ModuleList()
         for i in range(len(cond_output_channels)):
@@ -578,6 +578,7 @@ class LightGLVUNet(UNetModel):
 
         for i in cross_attn_insert_idx:
             self.project_modules.insert(i, ZeroCrossAttn(cond_output_channels[i], concat_channels[i]))
+            # print(self.project_modules[i])
 
     def step_progressive_mask(self):
         if len(self.progressive_mask_nums) > 0:
@@ -588,45 +589,232 @@ class LightGLVUNet(UNetModel):
                 else:
                     self.project_modules[i].mask = False
             return
+            # print(f'step_progressive_mask, current masked layers: {mask_num}')
         else:
             return
+            # print('step_progressive_mask, no more masked layers')
+        # for i in range(len(self.project_modules)):
+        #     print(self.project_modules[i].mask)
 
-
-
-    def forward(self, x, timesteps=None, context=None, y=None, control=None, control_scale=1, **kwargs):
-        assert (y is not None) == (
-            self.num_classes is not None
-        ), "must specify y if and only if the model is class-conditional"
-        hs = []
-
+    @torch.no_grad()
+    def forward(
+        self,
+        x,
+        timesteps=None,
+        context=None,
+        y=None,
+        control=None,
+        control_scale=1.0,
+        fbcache_mode="none",  # or input_stage1, input_stage2, ...
+        partial_info=None,
+        **kwargs
+    ):
+        # 0) 공통 준비
+        assert (y is not None) == (self.num_classes is not None)
         _dtype = control[0].dtype
         x, context, y = x.to(_dtype), context.to(_dtype), y.to(_dtype)
 
-        with torch.no_grad():
-            t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False).to(x.dtype)
-            emb = self.time_embed(t_emb)
+        t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False).to(x.dtype)
+        emb = self.time_embed(t_emb)
+        if self.num_classes is not None:
+            emb = emb + self.label_emb(y)
 
-            if self.num_classes is not None:
-                assert y.shape[0] == x.shape[0]
-                emb = emb + self.label_emb(y)
+        # (A) fbcache_mode="none": (원본 코드)
+        if fbcache_mode == "none":
+            with torch.no_grad():
+                hs = []
+                h = x
+                for module in self.input_blocks:
+                    h = module(h, emb, context)
+                    hs.append(h)
+            adapter_idx = len(self.project_modules) - 1
+            control_idx = len(control) - 1
 
-            # h = x.type(self.dtype)
+            h = self.middle_block(h, emb, context)
+            h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+            adapter_idx -= 1
+            control_idx -= 1
+
+            for i, module in enumerate(self.output_blocks):
+                _h = hs.pop()
+                h = self.project_modules[adapter_idx](control[control_idx], _h, h, control_scale=control_scale)
+                adapter_idx -= 1
+
+                if len(module) == 3:
+                    assert isinstance(module[2], Upsample)
+                    for layer in module[:2]:
+                        if isinstance(layer, TimestepBlock):
+                            h = layer(h, emb)
+                        elif isinstance(layer, SpatialTransformer):
+                            h = layer(h, context)
+                        else:
+                            h = layer(h)
+                    h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+                    adapter_idx -= 1
+                    h = module[2](h)
+                else:
+                    h = module(h, emb, context)
+                control_idx -= 1
+
+            return self.out(h.type(x.dtype))
+
+        # (B) input_stage1
+        if fbcache_mode == "input_stage1":
+            # input_blocks만 수행
+            hs = []
+            h = x
+            for module in self.input_blocks:
+                h = module(h, emb, context)
+                hs.append(h)
+            
+            # **중요**: 우리가 apply_prev_hidden_states_residual_multi 등에 쓸
+            # adapter_idx / control_idx가 필요하면, 여기서 만들어준다.
+            adapter_idx = len(self.project_modules) - 1
+            control_idx = len(control) - 1
+
+            # stage1 partial_info
+            partial_info = {
+                "mode": "input",
+                "h": h,
+                "hs": hs,
+                "emb": emb,
+                "context": context,
+                "control": control,
+                "adapter_idx": adapter_idx,  
+                "control_idx": control_idx 
+            }
+            return partial_info
+
+        # (C) input_stage2
+        if fbcache_mode == "input_stage2":
+            if partial_info is None or partial_info.get("mode", "") != "input":
+                raise ValueError("input_stage2 requires partial_info from input_stage1")
+            h = partial_info["h"]
+            hs = partial_info["hs"]
+            emb = partial_info["emb"]
+            context = partial_info["context"]
+            control = partial_info["control"]
+
+            adapter_idx = partial_info["adapter_idx"]
+            control_idx = partial_info["control_idx"]
+
+            with torch.no_grad():
+                # middle
+                h = self.middle_block(h, emb, context)
+                # 여기서 "첫 프로젝트" 할 수도 있고,
+                # adapter_idx / control_idx를 줄여가며
+                h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+                adapter_idx -= 1
+                control_idx -= 1
+
+                # output_blocks
+                for i, module in enumerate(self.output_blocks):
+                    _h = hs.pop()
+                    h = self.project_modules[adapter_idx](control[control_idx], _h, h, control_scale=control_scale)
+                    adapter_idx -= 1
+
+                    if len(module) == 3:
+                        assert isinstance(module[2], Upsample)
+                        for layer in module[:2]:
+                            if isinstance(layer, TimestepBlock):
+                                h = layer(h, emb)
+                            elif isinstance(layer, SpatialTransformer):
+                                h = layer(h, context)
+                            else:
+                                h = layer(h)
+                        h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+                        adapter_idx -= 1
+                        h = module[2](h)
+                    else:
+                        h = module(h, emb, context)
+                    control_idx -= 1
+
+            return self.out(h.type(x.dtype))
+
+        # (D) middle_stage1
+        if fbcache_mode == "middle_stage1":
+            hs = []
+            h = x
+            for module in self.input_blocks:
+                h = module(h, emb, context)
+                hs.append(h)
+            h = self.middle_block(h, emb, context)
+
+            adapter_idx = len(self.project_modules) - 1
+            control_idx = len(control) - 1
+
+            partial_info = {
+                "mode": "middle",
+                "h": h,
+                "hs": hs,
+                "emb": emb,
+                "context": context,
+                "control": control,
+                "adapter_idx": adapter_idx,
+                "control_idx": control_idx
+            }
+            return partial_info
+
+        # (E) middle_stage2
+        if fbcache_mode == "middle_stage2":
+            if partial_info is None or partial_info.get("mode", "") != "middle":
+                raise ValueError("middle_stage2 requires partial_info from middle_stage1")
+            h = partial_info["h"]
+            hs = partial_info["hs"]
+            emb = partial_info["emb"]
+            context = partial_info["context"]
+            control = partial_info["control"]
+            adapter_idx = partial_info["adapter_idx"]
+            control_idx = partial_info["control_idx"]
+
+            with torch.no_grad():
+                h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+                adapter_idx -= 1
+                control_idx -= 1
+                for i, module in enumerate(self.output_blocks):
+                    _h = hs.pop()
+                    h = self.project_modules[adapter_idx](control[control_idx], _h, h, control_scale=control_scale)
+                    adapter_idx -= 1
+
+                    if len(module) == 3:
+                        assert isinstance(module[2], Upsample)
+                        for layer in module[:2]:
+                            if isinstance(layer, TimestepBlock):
+                                h = layer(h, emb)
+                            elif isinstance(layer, SpatialTransformer):
+                                h = layer(h, context)
+                            else:
+                                h = layer(h)
+                        h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+                        adapter_idx -= 1
+                        h = module[2](h)
+                    else:
+                        h = module(h, emb, context)
+                    control_idx -= 1
+
+            return self.out(h.type(x.dtype))
+
+        # (F) output_stage1
+        if fbcache_mode == "output_stage1":
+            hs = []
             h = x
             for module in self.input_blocks:
                 h = module(h, emb, context)
                 hs.append(h)
 
-        adapter_idx = len(self.project_modules) - 1
-        control_idx = len(control) - 1
-        h = self.middle_block(h, emb, context)
-        h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
-        adapter_idx -= 1
-        control_idx -= 1
+            h = self.middle_block(h, emb, context)
+            adapter_idx = len(self.project_modules) - 1
+            control_idx = len(control) - 1
+            h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+            adapter_idx -= 1
+            control_idx -= 1
 
-        for i, module in enumerate(self.output_blocks):
+            i = 0
+            module = self.output_blocks[i]
             _h = hs.pop()
             h = self.project_modules[adapter_idx](control[control_idx], _h, h, control_scale=control_scale)
             adapter_idx -= 1
+
             if len(module) == 3:
                 assert isinstance(module[2], Upsample)
                 for layer in module[:2]:
@@ -643,8 +831,55 @@ class LightGLVUNet(UNetModel):
                 h = module(h, emb, context)
             control_idx -= 1
 
-        h = h.type(x.dtype)
-        if self.predict_codebook_ids:
-            assert False, "NS"
-        else:
-            return self.out(h)
+            partial_info = {
+                "mode": "output",
+                "h": h,
+                "hs": hs,
+                "adapter_idx": adapter_idx,
+                "control_idx": control_idx,
+                "emb": emb,
+                "context": context,
+                "control": control,
+                "i": i
+            }
+            return partial_info
+
+        # (G) output_stage2
+        if fbcache_mode == "output_stage2":
+            if partial_info is None or partial_info.get("mode", "") != "output":
+                raise ValueError("output_stage2 requires partial_info from output_stage1")
+            h = partial_info["h"]
+            hs = partial_info["hs"]
+            adapter_idx = partial_info["adapter_idx"]
+            control_idx = partial_info["control_idx"]
+            emb = partial_info["emb"]
+            context = partial_info["context"]
+            control = partial_info["control"]
+            i = partial_info["i"]
+
+            for j in range(i+1, len(self.output_blocks)):
+                module = self.output_blocks[j]
+                _h = hs.pop()
+                h = self.project_modules[adapter_idx](control[control_idx], _h, h, control_scale=control_scale)
+                adapter_idx -= 1
+
+                if len(module) == 3:
+                    assert isinstance(module[2], Upsample)
+                    for layer in module[:2]:
+                        if isinstance(layer, TimestepBlock):
+                            h = layer(h, emb)
+                        elif isinstance(layer, SpatialTransformer):
+                            h = layer(h, context)
+                        else:
+                            h = layer(h)
+                    h = self.project_modules[adapter_idx](control[control_idx], h, control_scale=control_scale)
+                    adapter_idx -= 1
+                    h = module[2](h)
+                else:
+                    h = module(h, emb, context)
+                control_idx -= 1
+
+            return self.out(h.type(x.dtype))
+
+        # else
+        raise ValueError(f"Unknown fbcache_mode={fbcache_mode}")

@@ -10,6 +10,121 @@ from PIL import Image
 from torch.nn.functional import interpolate
 from omegaconf import OmegaConf
 from sgm.util import instantiate_from_config
+import os
+import torch
+import numpy as np
+import cv2
+from PIL import Image
+from torch.nn.functional import interpolate
+from omegaconf import OmegaConf
+from sgm.util import instantiate_from_config
+import copy
+import re
+import string
+import torch
+from llava.mm_utils import tokenizer_image_token
+from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
+
+def get_img_describe(
+    image_tensor,
+    image,
+    model,
+    tokenizer,
+    prompt,
+    conv_templates,
+    image_token_index,
+    conv_template="llava_llama_3",
+    num_beams=1,
+    temperature = 0.2,
+    do_sample=True,
+    max_new_tokens=512,     
+    device="cuda"
+):
+    question = prompt
+    
+    conv = copy.deepcopy(conv_templates[conv_template])
+    conv.tokenizer = tokenizer
+    conv.append_message(conv.roles[0], question)
+    conv.append_message(conv.roles[1], None)
+    
+    prompt_question = conv.get_prompt()
+    
+    input_ids = tokenizer_image_token(
+        prompt_question,
+        tokenizer,
+        image_token_index,
+        return_tensors="pt"
+    ).unsqueeze(0).to(device)
+    
+    image_sizes = [image.size]
+    
+    with torch.inference_mode():
+        outputs = model.generate(
+        input_ids,
+        images=image_tensor,
+        image_sizes=image_sizes,
+        do_sample=do_sample,
+        temperature=temperature,
+        num_beams = num_beams,
+        max_new_tokens=max_new_tokens,
+        return_dict_in_generate=True,
+        output_scores=True
+    )
+    
+    generated_output = outputs[0][0].cpu().tolist()
+    image_caption = tokenizer.decode(generated_output, skip_special_tokens=True)
+    image_caption = [image_caption.lstrip()]
+    
+    return image_caption
+
+def get_state_dict(d):
+    return d.get('state_dict', d)
+
+
+def load_state_dict(ckpt_path, location='cpu'):
+    _, extension = os.path.splitext(ckpt_path)
+    if extension.lower() == ".safetensors":
+        import safetensors.torch
+        state_dict = safetensors.torch.load_file(ckpt_path, device=location)
+    else:
+        state_dict = get_state_dict(torch.load(ckpt_path, map_location=torch.device(location)))
+    state_dict = get_state_dict(state_dict)
+    print(f'Loaded state_dict from [{ckpt_path}]')
+    return state_dict
+
+
+def create_model(config_path):
+    config = OmegaConf.load(config_path)
+    model = instantiate_from_config(config.model).cpu()
+    print(f'Loaded model config from [{config_path}]')
+    return model
+
+
+def create_SR_model(config_path, SUPIR_sign=None, load_default_setting=False):
+    config = OmegaConf.load(config_path)
+    model = instantiate_from_config(config.model).cpu()
+    print(f'Loaded model config from [{config_path}]')
+    if config.SDXL_CKPT is not None:
+        model.load_state_dict(load_state_dict(config.SDXL_CKPT), strict=False)
+    if config.SUPIR_CKPT is not None:
+        model.load_state_dict(load_state_dict(config.SUPIR_CKPT), strict=False)
+    if SUPIR_sign is not None:
+        assert SUPIR_sign in ['F', 'Q']
+        if SUPIR_sign == 'F':
+            model.load_state_dict(load_state_dict(config.SUPIR_CKPT_F), strict=False)
+        elif SUPIR_sign == 'Q':
+            model.load_state_dict(load_state_dict(config.SUPIR_CKPT_Q), strict=False)
+    if load_default_setting:
+        default_setting = config.default_setting
+        return model, default_setting
+    return model
+
+def load_QF_ckpt(config_path):
+    config = OmegaConf.load(config_path)
+    ckpt_F = torch.load(config.SUPIR_CKPT_F, map_location='cpu')
+    ckpt_Q = torch.load(config.SUPIR_CKPT_Q, map_location='cpu')
+    return ckpt_Q, ckpt_F
+
 
 #####################CUSTOMRIZED#####################
 def degrade_image(img_pil: Image.Image, down_factor: float = 1.5) -> Image.Image:

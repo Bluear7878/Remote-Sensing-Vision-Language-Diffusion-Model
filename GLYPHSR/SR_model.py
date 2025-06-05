@@ -13,6 +13,7 @@ import os
 import random
 from datetime import datetime
 import lpips
+from GLYPHSR.modules.DFBCache import *
 
 import torchvision.transforms.functional as TF
 import torchmetrics.functional as TMF
@@ -50,7 +51,7 @@ class SR_backbone(DiffusionEngine):
         self.set_lpips()
         self.val_sample_kwargs  = None
         
-        self.upscale = 2
+        self.upscale = 1
         self.min_size = 256
         
     def set_lpips(self):
@@ -185,367 +186,8 @@ class SR_backbone(DiffusionEngine):
 
         return metrics["PSNR"]
     
-    
     @torch.no_grad()
-    def ping_pong_sampling(
-        self,
-        x,
-        p,          # prompt for image restoration
-        p_text,     # prompt for text restoration
-        p_p='default',
-        n_p='default',
-        a_text_prompt="default",
-        n_text_prompt="default",
-        image_steps=50,     # Stage-1 image steps
-        text_steps=20,      # Stage-2 text steps
-        restoration_scale=4.0,
-        s_churn=0,
-        s_noise=1.003,
-        cfg_scale=4.0,
-        seed=-1,
-        num_samples=1,
-        control_scale=1,
-        color_fix_type='None',
-        use_linear_CFG=False,
-        use_linear_control_scale=False,
-        cfg_scale_start=1.0,
-        control_scale_start=0.0,
-        **kwargs
-    ):
-        """
-        v2 version:
-        - During the early phase (before the switch point), alternately apply an
-        image guide on even steps and a text guide on odd steps.
-        - During the later phase (after the switch point), apply only the text guide.
-
-        Intermediate and final result images are saved in a timestamp-based directory.
-        """
-        import os
-        import torch
-        import random
-        from datetime import datetime
-
-        # ----------------------------------------------------------------
-        # 2) Preferences and Sampler Configuration
-        # ----------------------------------------------------------------
-        assert len(x) == len(p), "The number of input images does not match the number of prompts."
-        assert color_fix_type in ['Wavelet', 'AdaIn', 'None']
-
-        num_steps = image_steps + text_steps
-        N = len(x)
-
-        if num_samples > 1:
-            assert N == 1, "num_samples >1 : only support single input"
-            N = num_samples
-            x = x.repeat(N, 1, 1, 1)
-            p = p * N
-            p_text = p_text * N
-
-        if p_p == 'default':
-            p_p = self.p_p
-        if n_p == 'default':
-            n_p = self.n_p
-
-        # Sampler parameter settings
-        self.sampler_config.params.num_steps = num_steps
-        if use_linear_CFG:
-            self.sampler_config.params.guider_config.params.scale_min = cfg_scale
-            self.sampler_config.params.guider_config.params.scale = cfg_scale_start
-        else:
-            self.sampler_config.params.guider_config.params.scale_min = cfg_scale
-            self.sampler_config.params.guider_config.params.scale = cfg_scale
-        self.sampler_config.params.restore_cfg = restoration_scale
-        self.sampler_config.params.s_churn = s_churn
-        self.sampler_config.params.s_noise = s_noise
-        self.sampler = instantiate_from_config(self.sampler_config)
-
-        # set seed
-        if seed == -1:
-            seed = random.randint(0, 65535)
-        seed_everything(seed)
-
-        # ----------------------------------------------------------------
-        # 3) Initial latent space encoding and conditioning
-        # ----------------------------------------------------------------
-        _z = self.encode_first_stage_with_denoise(x, use_sample=False)
-        x_stage1 = self.decode_first_stage(_z)
-        z_stage1 = self.encode_first_stage(x_stage1)
-
-        # Condition preparation: Image and text respectively
-        c_img, uc_img = self.prepare_condition(_z, p, p_p, n_p, N)
-        c_text, uc_text = self.prepare_condition(_z, p_text, a_text_prompt, n_text_prompt, N)
-
-        # denoiser setting
-        denoiser_img = lambda inp, sigma, c, *args, **kwargs: self.denoiser(
-            self.model, inp, sigma, c, *args, **kwargs
-        )
-        denoiser_txt = lambda inp, sigma, c, *args, **kwargs: self.denoiser(
-            self.model, inp, sigma, c, *args, **kwargs
-        )
-
-        noised_z = torch.randn_like(_z).to(_z.device)
-        z, s_in, sigmas, num_sigmas, c_img, uc_img = self.sampler.init_loop(
-            noised_z, c_img, uc=uc_img, num_steps=num_steps
-        )
-
-        step_count = num_sigmas - 1
-
-        for i in range(step_count):
-            if i == 0:
-                x_center_cur = z_stage1
-            else:
-                x_center_cur = z
-            if i % 2 == 0:
-                guide_fn, cond, ucond = denoiser_img, c_img, uc_img
-            else:
-                guide_fn, cond, ucond = denoiser_txt, c_text, uc_text
-
-            z = self.sampler.step(
-                z, i, s_in, sigmas, guide_fn, cond, ucond,
-                x_center=x_center_cur,
-                control_scale=control_scale,
-                use_linear_control_scale=use_linear_control_scale,
-                control_scale_start=control_scale_start,
-            )
-        samples = self.decode_first_stage(z)
-        if color_fix_type == 'Wavelet':
-            samples = wavelet_reconstruction(samples, x_stage1)
-        elif color_fix_type == 'AdaIn':
-            samples = adaptive_instance_normalization(samples, x_stage1)
-
-        return samples
-    
-
-    
-    #################################################################################
-    ############################## 강우가 바꿈 #######################################
-    #################################################################################
-    @torch.no_grad()
-    def knagwoo_sampling(
-        self,
-        x,
-        p,          # prompt for image restoration
-        p_text,     # prompt for text restoration
-        p_p='default',
-        n_p='default',
-        a_text_prompt="default",
-        n_text_prompt="default",
-        image_steps=50,     # Stage-1 image steps
-        text_steps=20,      # Stage-2 text steps
-        restoration_scale=4.0,
-        s_churn=0,
-        s_noise=1.003,
-        cfg_scale=4.0,
-        seed=-1,
-        num_samples=1,
-        control_scale=1,
-        color_fix_type='None',
-        use_linear_CFG=False,
-        use_linear_control_scale=False,
-        cfg_scale_start=1.0,
-        control_scale_start=0.0,
-        image_focus_ratio = 0.5, 
-        **kwargs
-    ):
-        """
-        v2 version:
-        - During the early phase (before the switch point), alternately apply an
-        image guide on even steps and a text guide on odd steps.
-        - During the later phase (after the switch point), apply only the text guide.
-
-        Intermediate and final result images are saved in a timestamp-based directory.
-        """
-        import os
-        import torch
-        import random
-        from datetime import datetime
-
-        # ----------------------------------------------------------------
-        # 2) Preferences and Sampler Configuration
-        # ----------------------------------------------------------------
-        assert len(x) == len(p), "The number of input images does not match the number of prompts."
-        assert color_fix_type in ['Wavelet', 'AdaIn', 'None']
-
-        num_steps = image_steps + text_steps
-        N = len(x)
-
-        if num_samples > 1:
-            assert N == 1, "num_samples >1 : only support single input"
-            N = num_samples
-            x = x.repeat(N, 1, 1, 1)
-            p = p * N
-            p_text = p_text * N
-
-        if p_p == 'default':
-            p_p = self.p_p
-        if n_p == 'default':
-            n_p = self.n_p
-
-        # Sampler parameter settings
-        self.sampler_config.params.num_steps = num_steps
-        if use_linear_CFG:
-            self.sampler_config.params.guider_config.params.scale_min = cfg_scale
-            self.sampler_config.params.guider_config.params.scale = cfg_scale_start
-        else:
-            self.sampler_config.params.guider_config.params.scale_min = cfg_scale
-            self.sampler_config.params.guider_config.params.scale = cfg_scale
-        self.sampler_config.params.restore_cfg = restoration_scale
-        self.sampler_config.params.s_churn = s_churn
-        self.sampler_config.params.s_noise = s_noise
-        self.sampler = instantiate_from_config(self.sampler_config)
-
-        # set seed
-        if seed == -1:
-            seed = random.randint(0, 65535)
-        seed_everything(seed)
-
-        # ----------------------------------------------------------------
-        # 3) Initial latent space encoding and conditioning
-        # ----------------------------------------------------------------
-        _z = self.encode_first_stage_with_denoise(x, use_sample=False)
-        x_stage1 = self.decode_first_stage(_z)
-        z_stage1 = self.encode_first_stage(x_stage1)
-
-        # Condition preparation: Image and text respectively
-        c_img, uc_img = self.prepare_condition(_z, p, p_p, n_p, N)
-        c_text, uc_text = self.prepare_condition(_z, p_text, a_text_prompt, n_text_prompt, N)
-
-        # denoiser setting
-        denoiser_img = lambda inp, sigma, c, *args, **kwargs: self.denoiser(
-            self.model, inp, sigma, c, *args, **kwargs
-        )
-        denoiser_txt = lambda inp, sigma, c, *args, **kwargs: self.denoiser(
-            self.model, inp, sigma, c, *args, **kwargs
-        )
-
-        noised_z = torch.randn_like(_z).to(_z.device)
-        z, s_in, sigmas, num_sigmas, c_img, uc_img = self.sampler.init_loop(
-            noised_z, c_img, uc=uc_img, num_steps=num_steps
-        )
-
-        step_count = num_sigmas - 1
-        phase_switch_step = int(image_focus_ratio * step_count)
-
-        for i in range(step_count):
-            if i == 0:
-                x_center_cur = z_stage1
-            else:
-                x_center_cur = z
-
-            # 변경 부분
-            if i <= phase_switch_step:
-                if i % 2 == 0:
-                    guide_fn, cond, ucond = denoiser_img, c_img, uc_img
-                else:
-                    guide_fn, cond, ucond = denoiser_txt, c_text, uc_text
-            else:
-                guide_fn, cond, ucond = denoiser_txt, c_text, uc_text
-
-            z = self.sampler.step(
-                z, i, s_in, sigmas, guide_fn, cond, ucond,
-                x_center=x_center_cur,
-                control_scale=control_scale,
-                use_linear_control_scale=use_linear_control_scale,
-                control_scale_start=control_scale_start,
-            )
-        samples = self.decode_first_stage(z)
-        if color_fix_type == 'Wavelet':
-            samples = wavelet_reconstruction(samples, x_stage1)
-        elif color_fix_type == 'AdaIn':
-            samples = adaptive_instance_normalization(samples, x_stage1)
-
-        return samples
-
-
-    @torch.no_grad()
-    def mixing_sampling(
-        self,
-        x,
-        p,
-        p_text,
-        p_p='default',
-        n_p='default',
-        a_text_prompt="default",
-        n_text_prompt="default",
-        image_steps=50,
-        text_steps=20,
-        restoration_scale=4.0,
-        s_churn=0,
-        s_noise=1.003,
-        cfg_scale=4.0,
-        seed=-1,
-        num_samples=1,
-        control_scale=1,
-        color_fix_type='None',
-        use_linear_CFG=False,
-        use_linear_control_scale=False,
-        cfg_scale_start=1.0,
-        control_scale_start=0.0,
-        lambda_t=0.5,
-        **kwargs
-    ):
-
-        import torch, random, os
-        from datetime import datetime
-
-        num_steps = image_steps + text_steps
-        assert len(x) == len(p)
-        N = len(x)
-        if num_samples > 1:
-            assert N == 1, "num_samples >1 : only support single input"
-            x = x.repeat(num_samples,1,1,1)
-            p = p * num_samples; p_text = p_text * num_samples; N = num_samples
-        if p_p=='default': p_p=self.p_p
-        if n_p=='default': n_p=self.n_p
-
-        self.sampler_config.params.num_steps = num_steps
-        scales = (cfg_scale_start if use_linear_CFG else cfg_scale)
-        self.sampler_config.params.guider_config.params.scale = scales
-        self.sampler_config.params.guider_config.params.scale_min = cfg_scale
-        self.sampler_config.params.restore_cfg = restoration_scale
-        self.sampler_config.params.s_churn = s_churn
-        self.sampler_config.params.s_noise = s_noise
-        self.sampler = instantiate_from_config(self.sampler_config)
-        if seed<0: seed=random.randint(0,65535)
-        seed_everything(seed)
-
-        _z = self.encode_first_stage_with_denoise(x, use_sample=False)
-        x_stage1 = self.decode_first_stage(_z)
-        z0 = self.encode_first_stage(x_stage1)
-        c_img, uc_img = self.prepare_condition(_z,p,p_p,n_p,N)
-        c_txt, uc_txt = self.prepare_condition(_z,p_text,a_text_prompt,n_text_prompt,N)
-
-        if isinstance(c_img, dict) and isinstance(c_txt, dict):
-            c_mix = {k: lambda_t*c_img[k] + (1-lambda_t)*c_txt[k] for k in c_img}
-        else:
-            c_mix = lambda_t*c_img + (1-lambda_t)*c_txt
-            
-        if isinstance(uc_img, dict) and isinstance(uc_txt, dict):
-            uc_mix = {k: lambda_t*uc_img[k] + (1-lambda_t)*uc_txt[k] for k in uc_img}
-        else:
-            uc_mix = lambda_t*uc_img + (1-lambda_t)*uc_txt
-            
-        denoise = lambda inp, s, c, *a, **k: self.denoiser(self.model, inp, s, c, *a, **k)
-
-        z, s_in, sigmas, num_sigmas, *_ = self.sampler.init_loop(
-            torch.randn_like(_z).to(_z.device), c_mix, uc=uc_mix, num_steps=num_steps)
-        steps = num_sigmas - 1
-        guide_c, guide_uc = c_mix, uc_mix
-
-        for i in range(steps):
-            center = z0 if i==0 else z
-
-            z = self.sampler.step(z,i,s_in,sigmas,denoise,guide_c,guide_uc, x_center=center,
-                                  control_scale=control_scale,
-                                  use_linear_control_scale=use_linear_control_scale,
-                                  control_scale_start=control_scale_start)
-        samples = self.decode_first_stage(z)
-        if color_fix_type=='Wavelet': samples = wavelet_reconstruction(samples,x_stage1)
-        elif color_fix_type=='AdaIn': samples = adaptive_instance_normalization(samples,x_stage1)
-        return samples
-    
-    @torch.no_grad()
-    def just_sampling(self, x, p, p_p='default', n_p='default', num_steps=100, restoration_scale=4.0, s_churn=0, s_noise=1.003, cfg_scale=4.0, seed=-1,
+    def just_sampling(self, x, p, p_p='default', n_p='default',img_threshold=0.1, dec_img=1.0, num_steps=100, restoration_scale=4.0, s_churn=0, s_noise=1.003, cfg_scale=4.0, seed=-1,
                         num_samples=1, control_scale=1, color_fix_type='None', use_linear_CFG=False, use_linear_control_scale=False,
                         cfg_scale_start=1.0, control_scale_start=0.0, **kwargs):
         '''
@@ -578,27 +220,41 @@ class SR_backbone(DiffusionEngine):
         self.sampler_config.params.s_noise = s_noise
         self.sampler = instantiate_from_config(self.sampler_config)
 
-     
-        #if seed == -1:
-        #    seed = random.randint(0, 65535)
-        #seed_everything(seed)
-
-
         _z = self.encode_first_stage_with_denoise(x, use_sample=False)
         x_stage1 = self.decode_first_stage(_z)
         z_stage1 = self.encode_first_stage(x_stage1)
 
-        c, uc = self.prepare_condition(_z, p, p_p, n_p, N)
+        c_img, uc_img = self.prepare_condition(_z, p, p_p, n_p, N)
+        
+        image_cache = MyCacheContext()
 
-        denoiser = lambda input, sigma, c, control_scale: self.denoiser(
-            self.model, input, sigma, c, control_scale, **kwargs
+        denoiser = lambda inp, sigma, c, *args, **kwargs: self.denoiser(
+        self.model, inp, sigma, c, *args, **kwargs
         )
 
         noised_z = torch.randn_like(_z).to(_z.device)
-
-        _samples = self.sampler(denoiser, noised_z, cond=c, uc=uc, x_center=z_stage1, control_scale=control_scale,
-                                use_linear_control_scale=use_linear_control_scale, control_scale_start=control_scale_start)
-        samples = self.decode_first_stage(_samples)
+        
+        z, s_in, sigmas, num_sigmas, c_img, uc_img = self.sampler.init_loop(
+            noised_z, c_img, uc=uc_img, num_steps=num_steps
+        )
+        
+        x_center_cur = z_stage1
+        step_count = num_sigmas - 1
+        
+        with cache_context(image_cache):
+            for i in range(step_count):
+                z,img_threshold = self.sampler.step(
+                    z, i, s_in, sigmas, denoiser, c_img, uc_img,
+                    x_center=x_center_cur,
+                    control_scale=control_scale,
+                    use_linear_control_scale=use_linear_control_scale,
+                    control_scale_start=control_scale_start,
+                    threshold = img_threshold
+                )
+                x_center_cur = z
+                img_threshold = img_threshold*dec_img   
+                    
+        samples = self.decode_first_stage(z)
         if color_fix_type == 'Wavelet':
             samples = wavelet_reconstruction(samples, x_stage1)
         elif color_fix_type == 'AdaIn':

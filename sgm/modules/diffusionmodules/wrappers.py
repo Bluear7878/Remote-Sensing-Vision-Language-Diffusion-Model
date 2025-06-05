@@ -64,7 +64,6 @@ class OpenAIHalfWrapper(IdentityWrapper):
         )
         return out.float()
 
-
 class ControlWrapper(nn.Module):
     def __init__(self, diffusion_model, compile_model: bool = False, dtype=torch.float32):
         super().__init__()
@@ -82,7 +81,10 @@ class ControlWrapper(nn.Module):
         self.control_model = self.compile(control_model)
 
     def forward(
-            self, x: torch.Tensor, t: torch.Tensor, c: dict, control_scale=1, **kwargs
+            self, x: torch.Tensor, t: torch.Tensor, c: dict, control_scale=1,
+            fbcache_mode="none",
+            partial_info=None,
+        **kwargs
     ) -> torch.Tensor:
         with torch.autocast("cuda", dtype=self.dtype):
             control = self.control_model(x=c.get("control", None), timesteps=t, xt=x,
@@ -97,7 +99,11 @@ class ControlWrapper(nn.Module):
                 y=c.get("vector", None),
                 control=control,
                 control_scale=control_scale,
+                fbcache_mode=fbcache_mode,
+                partial_info=partial_info,
                 **kwargs,
             )
-        return out.float()
-
+        if "stage1" in fbcache_mode:
+            return out
+        else:
+            return out.float()

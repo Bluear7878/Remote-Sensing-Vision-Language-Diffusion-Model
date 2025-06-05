@@ -64,10 +64,15 @@ class DiscreteDenoiser(Denoiser):
 
 
 class DiscreteDenoiserWithControl(DiscreteDenoiser):
-    def __call__(self, network, input, sigma, cond, control_scale):
+    def __call__(self, network, input, sigma, cond, control_scale,fbcache_mode=None,partial_info=None):
         sigma = self.possibly_quantize_sigma(sigma)
         sigma_shape = sigma.shape
         sigma = append_dims(sigma, input.ndim)
         c_skip, c_out, c_in, c_noise = self.scaling(sigma)
         c_noise = self.possibly_quantize_c_noise(c_noise.reshape(sigma_shape))
-        return network(input * c_in, c_noise, cond, control_scale) * c_out + input * c_skip
+        
+    
+        if "stage1" in fbcache_mode:
+            return network(input * c_in, c_noise, cond, control_scale,fbcache_mode,partial_info)
+        else:
+            return network(input * c_in, c_noise, cond, control_scale,fbcache_mode,partial_info) * c_out + input * c_skip

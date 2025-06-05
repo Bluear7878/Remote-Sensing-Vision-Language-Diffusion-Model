@@ -8,6 +8,7 @@ from typing import Dict, Union
 import torch
 from omegaconf import ListConfig, OmegaConf
 from tqdm import tqdm
+from GLYPHSR.modules.DFBCache import *
 
 from ...modules.diffusionmodules.sampling_utils import (
     get_ancestral_step,
@@ -539,14 +540,65 @@ class RestoreEDMSampler(SingleStepDiffusionSampler):
         self.restore_cfg = restore_cfg
         self.restore_cfg_s_tmin = restore_cfg_s_tmin
         self.sigma_max = 14.6146
+        
+        
+        self.fb_mode = "input_stage"
+        #self.fb_mode = "middle_stage"
+        #self.fb_mode = "output_stage"
+    
+    
+    def denoise(self, x, denoiser, sigma, cond, uc, control_scale=1.0,threshold=0.1):
+        if threshold<=0:
+            denoised = denoiser(*self.guider.prepare_inputs(x, sigma, cond, uc),
+                                control_scale=control_scale,
+                                fbcache_mode="none",
+                                partial_info=None)
+            denoised = self.guider(denoised, sigma)
+            return denoised,threshold
+            
+        
+        context = get_current_cache_context()
+        
+        partial_info = denoiser(
+            *self.guider.prepare_inputs(x, sigma, cond, uc),
+            control_scale=control_scale,
+            fbcache_mode=self.fb_mode+"1",
+            partial_info=None,
+        )
+        
+        can_use_cache,cache_th = get_can_use_cache_multi(
+            partial_info["h"],  
+            threshold=threshold,
+            parallelized=False
+        )
+                
+        if can_use_cache:
+            final_decoded_h = context.final_decode
+            if final_decoded_h is not None:
+                return final_decoded_h,threshold
+        else:
+            #set_buffer("hidden_states_residual_multi", partial_info["h"].clone())
+            
+            context.prev = partial_info["h"].clone()
+            #c_idx = partial_info["control_idx"]
+            #set_buffer("encoder_hidden_states_residual_multi",
+            #        partial_info["control"][c_idx].clone())
 
-    def denoise(self, x, denoiser, sigma, cond, uc, control_scale=1.0):
-        denoised = denoiser(*self.guider.prepare_inputs(x, sigma, cond, uc), control_scale)
-        denoised = self.guider(denoised, sigma)
-        return denoised
+            denoised = denoiser(
+                *self.guider.prepare_inputs(x, sigma, cond, uc),
+                control_scale=control_scale,
+                fbcache_mode=self.fb_mode+"2",
+                partial_info=partial_info,
+            )
 
+            denoised = self.guider(denoised, sigma)
+            #set_buffer("final_decoded_h", denoised.clone())
+            context.final_decode = denoised.clone()
+
+            return denoised,cache_th
+       
     def sampler_step(self, sigma, next_sigma, denoiser, x, cond, uc=None, gamma=0.0, x_center=None, eps_noise=None,
-                     control_scale=1.0, use_linear_control_scale=False, control_scale_start=0.0):
+                     control_scale=1.0, use_linear_control_scale=False, control_scale_start=0.0,threshold=0.1):
         sigma_hat = sigma * (gamma + 1.0)
         if gamma > 0:
             if eps_noise is not None:
@@ -558,7 +610,8 @@ class RestoreEDMSampler(SingleStepDiffusionSampler):
         if use_linear_control_scale:
             control_scale = (sigma[0].item() / self.sigma_max) * (control_scale_start - control_scale) + control_scale
 
-        denoised = self.denoise(x, denoiser, sigma_hat, cond, uc, control_scale=control_scale)
+        
+        denoised,threshold = self.denoise(x, denoiser, sigma_hat, cond, uc, control_scale=control_scale, threshold=threshold)
 
         if (next_sigma[0] > self.restore_cfg_s_tmin) and (self.restore_cfg > 0):
             d_center = (denoised - x_center)
@@ -567,21 +620,21 @@ class RestoreEDMSampler(SingleStepDiffusionSampler):
         d = to_d(x, sigma_hat, denoised)
         dt = append_dims(next_sigma - sigma_hat, x.ndim)
         x = self.euler_step(x, d, dt)
-        return x
+        return x,threshold
 
     def __call__(self, denoiser, x, cond, uc=None, num_steps=None, x_center=None, control_scale=1.0,
-                 use_linear_control_scale=False, control_scale_start=0.0):
+                 use_linear_control_scale=False, control_scale_start=0.0, threshold=0.1):
         x, s_in, sigmas, num_sigmas, cond, uc = self.prepare_sampling_loop(
             x, cond, uc, num_steps
         )
-
+        th = threshold
         for _idx, i in enumerate(self.get_sigma_gen(num_sigmas)):
             gamma = (
                 min(self.s_churn / (num_sigmas - 1), 2**0.5 - 1)
                 if self.s_tmin <= sigmas[i] <= self.s_tmax
                 else 0.0
             )
-            x = self.sampler_step(
+            x,new_threshold = self.sampler_step(
                 s_in * sigmas[i],
                 s_in * sigmas[i + 1],
                 denoiser,
@@ -593,8 +646,10 @@ class RestoreEDMSampler(SingleStepDiffusionSampler):
                 control_scale=control_scale,
                 use_linear_control_scale=use_linear_control_scale,
                 control_scale_start=control_scale_start,
+                threshold = th
             )
-        return x
+            th = new_threshold
+        return x,th
     
     def init_loop(self, x, cond, uc=None, num_steps=None):
  
@@ -606,13 +661,16 @@ class RestoreEDMSampler(SingleStepDiffusionSampler):
     def step(self,
              x,  
              i,  
-             s_in, sigmas,  
+             s_in, sigmas, 
              denoiser, cond, uc,
              x_center=None,
              control_scale=1.0,
              use_linear_control_scale=False,
-             control_scale_start=0.0):
- 
+             control_scale_start=0.0,
+             threshold=0.1):
+        
+        th = threshold
+        
         gamma = (
             min(self.s_churn / (len(sigmas) - 1), 2**0.5 - 1)
             if self.s_tmin <= sigmas[i] <= self.s_tmax
@@ -620,8 +678,8 @@ class RestoreEDMSampler(SingleStepDiffusionSampler):
         )
         sigma_i = s_in * sigmas[i]
         sigma_next = s_in * sigmas[i + 1]
-
-        x = self.sampler_step(
+        
+        x,new_threshold = self.sampler_step(
             sigma=sigma_i,
             next_sigma=sigma_next,
             denoiser=denoiser,
@@ -633,8 +691,9 @@ class RestoreEDMSampler(SingleStepDiffusionSampler):
             control_scale=control_scale,
             use_linear_control_scale=use_linear_control_scale,
             control_scale_start=control_scale_start,
+            threshold=th
         )
-        return x
+        return x,new_threshold
 
 
 class TiledRestoreEDMSampler(RestoreEDMSampler):
