@@ -123,7 +123,7 @@ LQ_img = LQ_img.unsqueeze(0).to(SR_MODEL_CUDA)[:, :3, :, :]
 sample_func = "just_sampling"
 sample_function = getattr(SR_model, sample_func, None)
 
-samples = sample_function(LQ_img, image_caption,img_threshold=0.1, dec_img=0.99,
+samples = sample_function(LQ_img, image_caption,img_threshold=0.1, dec_img=1, # img_threshold = 0.1 -> 0.15 -> 0.2 dec_img = 1 
                           num_steps=50, restoration_scale=args.s_stage1, s_churn=args.s_churn,
                                     s_noise=args.s_noise, cfg_scale=args.s_cfg, control_scale=args.s_stage2, seed=args.seed,
                                     num_samples=args.num_samples, p_p=args.a_prompt, n_p=args.n_prompt, color_fix_type=args.color_fix_type,
