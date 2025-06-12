@@ -17,19 +17,15 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-
-from transformers import AutoConfig, AutoModelForCausalLM, LlamaConfig
-
 from torch.nn import CrossEntropyLoss
-
-
 # , LlamaModel, LlamaForCausalLM, GenerationConfig
 # from .modeling_llama import LlamaModel, LlamaForCausalLM
-from transformers import LlamaModel, LlamaForCausalLM
-from transformers.modeling_outputs import CausalLMOutputWithPast
+from transformers import (AutoConfig, AutoModelForCausalLM, LlamaConfig,
+                          LlamaForCausalLM, LlamaModel)
 from transformers.generation.utils import GenerateOutput
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from llava.model.llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+from llava.model.llava_arch import LlavaMetaForCausalLM, LlavaMetaModel
 
 
 class LlavaConfig(LlamaConfig):

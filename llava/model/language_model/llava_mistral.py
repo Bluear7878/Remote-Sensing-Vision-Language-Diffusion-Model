@@ -18,13 +18,12 @@ from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
-
-from transformers import AutoConfig, AutoModelForCausalLM, MistralConfig, MistralModel, MistralForCausalLM, GenerationConfig
-
-from transformers.modeling_outputs import CausalLMOutputWithPast
+from transformers import (AutoConfig, AutoModelForCausalLM, GenerationConfig,
+                          MistralConfig, MistralForCausalLM, MistralModel)
 from transformers.generation.utils import GenerateOutput
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+from ..llava_arch import LlavaMetaForCausalLM, LlavaMetaModel
 
 
 class LlavaMistralConfig(MistralConfig):

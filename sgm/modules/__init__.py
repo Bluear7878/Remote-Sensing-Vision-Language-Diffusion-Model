@@ -1,6 +1,6 @@
-from .encoders.modules import GeneralConditioner
-from .encoders.modules import GeneralConditionerWithControl
-from .encoders.modules import PreparedConditioner
+from .encoders.modules import (GeneralConditioner,
+                               GeneralConditionerWithControl,
+                               PreparedConditioner)
 
 UNCONDITIONAL_CONFIG = {
     "target": "sgm.modules.GeneralConditioner",

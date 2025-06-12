@@ -1,28 +1,26 @@
 # from einops._torch_specific import allow_ops_in_compiled_graph
 # allow_ops_in_compiled_graph()
+import re
+from functools import partial
+
 import einops
 import torch
 import torch as th
 import torch.nn as nn
 from einops import rearrange, repeat
 
-from sgm.modules.diffusionmodules.util import (
-    avg_pool_nd,
-    checkpoint,
-    conv_nd,
-    linear,
-    normalization,
-    timestep_embedding,
-    zero_module,
-)
-
-from sgm.modules.diffusionmodules.openaimodel import Downsample, Upsample, UNetModel, Timestep, \
-    TimestepEmbedSequential, ResBlock, AttentionBlock, TimestepBlock
-from sgm.modules.attention import SpatialTransformer, MemoryEfficientCrossAttention, CrossAttention
-from sgm.util import default, log_txt_as_img, exists, instantiate_from_config
-import re
-import torch
-from functools import partial
+from sgm.modules.attention import (CrossAttention,
+                                   MemoryEfficientCrossAttention,
+                                   SpatialTransformer)
+from sgm.modules.diffusionmodules.openaimodel import (AttentionBlock,
+                                                      Downsample, ResBlock,
+                                                      Timestep, TimestepBlock,
+                                                      TimestepEmbedSequential,
+                                                      UNetModel, Upsample)
+from sgm.modules.diffusionmodules.util import (avg_pool_nd, checkpoint,
+                                               conv_nd, linear, normalization,
+                                               timestep_embedding, zero_module)
+from sgm.util import default, exists, instantiate_from_config, log_txt_as_img
 
 try:
     import xformers
@@ -666,7 +664,7 @@ class LightGLVUNet(UNetModel):
             for module in self.input_blocks:
                 h = module(h, emb, context)
                 hs.append(h)
-            
+
             # **중요**: 우리가 apply_prev_hidden_states_residual_multi 등에 쓸
             # adapter_idx / control_idx가 필요하면, 여기서 만들어준다.
             adapter_idx = len(self.project_modules) - 1
@@ -680,8 +678,8 @@ class LightGLVUNet(UNetModel):
                 "emb": emb,
                 "context": context,
                 "control": control,
-                "adapter_idx": adapter_idx,  
-                "control_idx": control_idx 
+                "adapter_idx": adapter_idx,
+                "control_idx": control_idx
             }
             return partial_info
 

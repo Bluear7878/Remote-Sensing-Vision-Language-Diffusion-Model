@@ -1,13 +1,13 @@
-from itertools import repeat
 import collections.abc
 import logging
 import math
-import numpy as np
+from itertools import repeat
 
+import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import nn as nn
 from torchvision.ops.misc import FrozenBatchNorm2d
-import torch.nn.functional as F
 
 
 # open CLIP

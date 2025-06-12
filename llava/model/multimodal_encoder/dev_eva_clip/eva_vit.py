@@ -7,19 +7,19 @@
 # --------------------------------------------------------'
 # not tested yet
 import math
-from transformers import CLIPImageProcessor
+import time
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-from timm.models.layers import drop_path, to_2tuple, trunc_normal_
-from .eva_clip import create_model_and_transforms, get_model_config
-import torch
 import torchvision
-import time
+from timm.models.layers import drop_path, to_2tuple, trunc_normal_
+from transformers import CLIPImageProcessor
 
 from llava.utils import rank0_print
+
+from .eva_clip import create_model_and_transforms, get_model_config
 
 
 class EvaViTWrapper(nn.Module):

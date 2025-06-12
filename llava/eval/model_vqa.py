@@ -1,23 +1,24 @@
 import argparse
-import torch
-import os
 import json
-from tqdm import tqdm
-import shortuuid
+import math
+import os
+import re
+from typing import Dict, List, Optional, Sequence
 
-from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
-from llava.conversation import conv_templates, SeparatorStyle
+import shortuuid
+import torch
+import transformers
+from PIL import Image
+from tqdm import tqdm
+
+from llava.constants import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
+                             DEFAULT_IMAGE_TOKEN, IGNORE_INDEX,
+                             IMAGE_TOKEN_INDEX)
+from llava.conversation import SeparatorStyle, conv_templates
+from llava.mm_utils import (KeywordsStoppingCriteria, get_model_name_from_path,
+                            tokenizer_image_token)
 from llava.model.builder import load_pretrained_model
 from llava.utils import disable_torch_init
-from llava.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
-
-from llava.constants import IGNORE_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN, IMAGE_TOKEN_INDEX
-from typing import Dict, Optional, Sequence, List
-import transformers
-import re
-
-from PIL import Image
-import math
 
 
 def split_list(lst, n):
@@ -56,9 +57,9 @@ def preprocess_qwen(sources, tokenizer: transformers.PreTrainedTokenizer, has_im
         if has_image and sentence["value"] is not None and "<image>" in sentence["value"]:
             num_image = len(re.findall(DEFAULT_IMAGE_TOKEN, sentence["value"]))
             texts = sentence["value"].split('<image>')
-            _input_id = tokenizer(role).input_ids + nl_tokens 
+            _input_id = tokenizer(role).input_ids + nl_tokens
             for i,text in enumerate(texts):
-                _input_id += tokenizer(text).input_ids 
+                _input_id += tokenizer(text).input_ids
                 if i<len(texts)-1:
                     _input_id += [IMAGE_TOKEN_INDEX] + nl_tokens
             _input_id += [im_end] + nl_tokens
@@ -84,7 +85,7 @@ def preprocess_qwen(sources, tokenizer: transformers.PreTrainedTokenizer, has_im
     return input_ids
 
 def eval_model(args):
-    
+
     # Model
     disable_torch_init()
     model_path = os.path.expanduser(args.model_path)
@@ -98,7 +99,7 @@ def eval_model(args):
     answers_file = os.path.expanduser(args.answers_file)
     os.makedirs(os.path.dirname(answers_file), exist_ok=True)
     ans_file = open(answers_file, "w")
-    
+
     for line in tqdm(questions):
         idx = line["sample_id"]
         question_type = line["metadata"]["question_type"]
@@ -142,7 +143,7 @@ def eval_model(args):
                 max_new_tokens=1024,
                 use_cache=True)
 
-        
+
         outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0]
         outputs = outputs.strip()
         if outputs.endswith(stop_str):
@@ -197,7 +198,7 @@ def eval_model(args):
                         # no_repeat_ngram_size=3,
                         max_new_tokens=1024,
                         use_cache=True)
-        
+
                 outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0]
                 outputs = outputs.strip()
                 if outputs.endswith(stop_str):

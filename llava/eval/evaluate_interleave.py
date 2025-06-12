@@ -1,12 +1,12 @@
-import re
-from rouge import Rouge
 import argparse
-import os
 import json
+import os
+import re
+
 import numpy as np
+from rouge import Rouge
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
 
 spot_the_diff = ["Spot-the-Diff", "Birds-to-Words", "CLEVR-Change"]
 image_edit_instruct = ["IEdit", "HQ-Edit", "MagicBrush"]
@@ -46,7 +46,7 @@ class Eval:
             "?",
             "!",
         ]
-        
+
     def processPunctuation(self, inText):
         outText = inText
         for p in self.punct:
@@ -58,7 +58,7 @@ class Eval:
                 outText = outText.replace(p, " ")
         outText = self.periodStrip.sub("", outText, re.UNICODE)
         return outText
-    
+
     def process(self, answer):
         answer = answer.replace("\n", " ")
         answer = answer.replace("\t", " ")
@@ -84,7 +84,7 @@ class Eval:
 
             if gt_ans == '':
                 continue
-            
+
             if pred_ans == '':
                 s = 0
             else:
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('--result-dir', type=str, required=True)
 
     args = parser.parse_args()
-    
+
     result_file = os.path.join(args.result_dir, "result.jsonl")
 
     if not os.path.exists(result_file):
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         exit(0)
     with open(result_file, 'r') as f:
         preds_all = [json.loads(line) for line in f]
-    
+
     preds_all_dict = dict()
     for pred in preds_all:
         if pred["dataset"] not in preds_all_dict:
@@ -183,10 +183,10 @@ if __name__ == "__main__":
     eval_result_list_detail = dict()
 
     for dataset in preds_all_dict:
-        
+
         preds = preds_all_dict[dataset]
         question_type = preds[0]["question_type"]
-   
+
         if question_type == 'open-ended':
             eval_result, eval_list = E.evaluate_rouge(preds)
 

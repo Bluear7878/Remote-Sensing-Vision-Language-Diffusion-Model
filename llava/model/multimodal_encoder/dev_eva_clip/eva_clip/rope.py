@@ -1,8 +1,9 @@
-from math import pi
-import torch
-from torch import nn
-from einops import rearrange, repeat
 import logging
+from math import pi
+
+import torch
+from einops import rearrange, repeat
+from torch import nn
 
 
 def broadcat(tensors, dim=-1):

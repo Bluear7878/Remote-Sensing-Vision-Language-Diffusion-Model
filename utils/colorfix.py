@@ -8,8 +8,8 @@ import torch
 from PIL import Image
 from torch import Tensor
 from torch.nn import functional as F
+from torchvision.transforms import ToPILImage, ToTensor
 
-from torchvision.transforms import ToTensor, ToPILImage
 
 def adain_color_fix(target: Image, source: Image):
     # Convert images to tensors
@@ -117,4 +117,3 @@ def wavelet_reconstruction(content_feat:Tensor, style_feat:Tensor):
     del style_high_freq
     # reconstruct the content feature with the style's high frequency
     return content_high_freq + style_low_freq
-

@@ -6,18 +6,19 @@ python3 train_GLYPH_SR.py \
     --val_hq_meta_path /home/delta1/Texture/GYLPH-SR/train_sample/metadata_HQ.jsonl \
     --val_neg_meta_path /home/delta1/Texture/GYLPH-SR/train_sample/metadata_with_neg.jsonl \
 """
-import os
 import argparse
+import os
 from dataclasses import dataclass, fields
-import torch
+
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+import torch
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
-from sgm.util import instantiate_from_config
 from GLYPHSR.ControlNet import load_TS_ControlNet
-from GLYPHSR.util import *
 from GLYPHSR.dataloader import make_hqlq_dataloader
+from GLYPHSR.util import *
+from sgm.util import instantiate_from_config
 
 # Default device
 SR_DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -41,7 +42,7 @@ class TrainConfig:
     img_size_train: int = 512
     img_size_val: int = 256
     num_samples: int = 1
-    
+
     upscale: int = 2
     sign: str = "Q"
     seed: int = -1
@@ -86,7 +87,7 @@ class TrainConfig:
     ckpt_filename: str = "FT1_epoch{epoch:03d}-train_loss{train/loss:.4f}"
     monitor_metric: str = "train/loss"
     monitor_mode: str = "min"
-    
+
     # Prompts
     a_prompt: str = (
         "Cinematic, High Contrast, highly detailed, taken using a Canon EOS R camera, "

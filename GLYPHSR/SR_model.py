@@ -1,22 +1,25 @@
-import torch
-from sgm.models.diffusion import DiffusionEngine
-from sgm.util import instantiate_from_config
 import copy
-from sgm.modules.distributions.distributions import DiagonalGaussianDistribution
-import random
-from pytorch_lightning import seed_everything
-from torch.nn.functional import interpolate
-from utils.colorfix import wavelet_reconstruction, adaptive_instance_normalization
-from utils.tilevae import VAEHook
-from GLYPHSR.util import PIL2Tensor, Tensor2PIL, convert_dtype, degrade_image
 import os
 import random
 from datetime import datetime
-import lpips
-from GLYPHSR.modules.DFBCache import *
 
-import torchvision.transforms.functional as TF
+import lpips
+import torch
 import torchmetrics.functional as TMF
+import torchvision.transforms.functional as TF
+from pytorch_lightning import seed_everything
+from torch.nn.functional import interpolate
+
+from GLYPHSR.modules.DFBCache import *
+from GLYPHSR.util import PIL2Tensor, Tensor2PIL, convert_dtype, degrade_image
+from sgm.models.diffusion import DiffusionEngine
+from sgm.modules.distributions.distributions import \
+    DiagonalGaussianDistribution
+from sgm.util import instantiate_from_config
+from utils.colorfix import (adaptive_instance_normalization,
+                            wavelet_reconstruction)
+from utils.tilevae import VAEHook
+
 
 class SR_backbone(DiffusionEngine):
     def __init__(self, control_stage_config, ae_dtype='fp32', diffusion_dtype='fp32', p_p='', n_p='', *args, **kwargs):
@@ -46,14 +49,14 @@ class SR_backbone(DiffusionEngine):
 
         self.p_p = p_p
         self.n_p = n_p
-        
+
         self._lpips = None
         self.set_lpips()
         self.val_sample_kwargs  = None
-        
+
         self.upscale = 1
         self.min_size = 256
-        
+
     def set_lpips(self):
         if self._lpips is None:
             self._lpips = lpips.LPIPS(net="vgg").eval().to(self.device)
@@ -141,10 +144,10 @@ class SR_backbone(DiffusionEngine):
                         _c, _ = self.conditioner.get_unconditional_conditioning(batch, None)
                 c.append(_c)
         return c, uc
-    
+
 
     @torch.no_grad()
-    def calc_metrics(self, sr, hr):              
+    def calc_metrics(self, sr, hr):
         if sr.shape[-2:] != hr.shape[-2:]:
             sr = TF.resize(sr, hr.shape[-2:], antialias=True)
 
@@ -153,26 +156,26 @@ class SR_backbone(DiffusionEngine):
 
         psnr  = TMF.peak_signal_noise_ratio(sr01, hr01, data_range=1.0)
         ssim  = TMF.structural_similarity_index_measure(sr01, hr01, data_range=1.0)
-        lpips = self._lpips(sr, hr).mean() 
+        lpips = self._lpips(sr, hr).mean()
         return {"PSNR": psnr, "SSIM": ssim, "LPIPS": lpips}
-    
+
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
-        
+
         hr_tensor   = batch["input_tensor"]
         txt = batch["txt"]
-           
+
         pil_hr = Tensor2PIL(hr_tensor.squeeze(0), hr_tensor.shape[-2], hr_tensor.shape[-1])
         pil_lq = degrade_image(pil_hr, down_factor=10)
         lq_tensor, h0, w0 = PIL2Tensor(pil_lq, upscale=self.upscale, min_size=self.min_size)
         lq_tensor = lq_tensor.unsqueeze(0)[:, :3, :, :].to(self.device)  # [1,3,H,W]
-        
+
         sr_tensors = self.just_sampling(
             x=lq_tensor,
             p=txt,
             **self.val_sample_kwargs
         )
-        
+
         metrics = self.calc_metrics(sr_tensors[0].unsqueeze(0), hr_tensor.to(self.device))
         self.log_dict(
             {
@@ -185,7 +188,7 @@ class SR_backbone(DiffusionEngine):
         )
 
         return metrics["PSNR"]
-    
+
     @torch.no_grad()
     def just_sampling(self, x, p, p_p='default', n_p='default',img_threshold=0.1, dec_img=1.0, num_steps=100, restoration_scale=4.0, s_churn=0, s_noise=1.003, cfg_scale=4.0, seed=-1,
                         num_samples=1, control_scale=1, color_fix_type='None', use_linear_CFG=False, use_linear_control_scale=False,
@@ -225,7 +228,7 @@ class SR_backbone(DiffusionEngine):
         z_stage1 = self.encode_first_stage(x_stage1)
 
         c_img, uc_img = self.prepare_condition(_z, p, p_p, n_p, N)
-        
+
         image_cache = MyCacheContext()
 
         denoiser = lambda inp, sigma, c, *args, **kwargs: self.denoiser(
@@ -233,14 +236,14 @@ class SR_backbone(DiffusionEngine):
         )
 
         noised_z = torch.randn_like(_z).to(_z.device)
-        
+
         z, s_in, sigmas, num_sigmas, c_img, uc_img = self.sampler.init_loop(
             noised_z, c_img, uc=uc_img, num_steps=num_steps
         )
-        
+
         x_center_cur = z_stage1
         step_count = num_sigmas - 1
-        
+
         with cache_context(image_cache):
             for i in range(step_count):
                 z,img_threshold = self.sampler.step(
@@ -252,13 +255,11 @@ class SR_backbone(DiffusionEngine):
                     threshold = img_threshold
                 )
                 x_center_cur = z
-                img_threshold = img_threshold*dec_img   
-                    
+                img_threshold = img_threshold*dec_img
+
         samples = self.decode_first_stage(z)
         if color_fix_type == 'Wavelet':
             samples = wavelet_reconstruction(samples, x_stage1)
         elif color_fix_type == 'AdaIn':
             samples = adaptive_instance_normalization(samples, x_stage1)
         return samples
-
-    

@@ -4,25 +4,27 @@ Entry point for GLYPH-SR processing pipeline.
 Parses command-line arguments, loads models, and executes super-resolution
 and OCR-guided text restoration on input images.
 """
-import os
-import json
-import copy
 import argparse
-import yaml
-import torch
+import copy
+import json
+import os
 from dataclasses import dataclass, fields
+
+import torch
+import yaml
 from omegaconf import OmegaConf
+from peft import PeftModel
 from PIL import Image
 from transformers import BitsAndBytesConfig
-from sgm.util import instantiate_from_config
+
 from GLYPHSR.ControlNet import load_TS_ControlNet
-from GLYPHSR.OCR import get_img_describe, generate_ocr_text, get_text_position
-from GLYPHSR.util import degrade_image, PIL2Tensor, Tensor2PIL
-from llava.model.builder import load_pretrained_model
-from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
+from GLYPHSR.OCR import generate_ocr_text, get_img_describe, get_text_position
+from GLYPHSR.util import PIL2Tensor, Tensor2PIL, degrade_image
+from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
-from peft import PeftModel
+from llava.model.builder import load_pretrained_model
+from sgm.util import instantiate_from_config
 
 # Default device assignments for different model components
 SR_MODEL_CUDA = "cuda:0"
@@ -160,7 +162,7 @@ def main():
     # Load TS-ControlNet for GLYPH-SR
     cfg_path = cfg.yaml_file
     GYLPH_pretrained_ckpt = cfg.GYLPH_pretrained_ckpt
-    
+
     GLYPH_SR_model, _ = load_TS_ControlNet(
         cfg_path=cfg_path,
         args=cfg,
@@ -173,7 +175,7 @@ def main():
     # Load language-vision model
     MODEL_PATH = "lmms-lab/llama3-llava-next-8b"
     conv_template = "llava_llama_3"
-    
+
     tokenizer, VLM_model, image_processor, max_length = load_pretrained_model(
     MODEL_PATH, None, conv_template, device_map="cpu", attn_implementation=None
     )
@@ -244,7 +246,7 @@ def main():
     # Combine prompts
     a_text = cfg.a_text_prompt + cfg.a_prompt
     n_text = cfg.n_text_prompt + cfg.n_prompt
-    
+
     texture_prompt_with_loc = [text_loc + ' ' + caption[0]]
 
     # Sampling
@@ -275,7 +277,7 @@ def main():
 
     # Convert tensor back to PIL and save
     output_img = Tensor2PIL(samples[0], h0, w0)
-    
+
     try:
         with open(meta_path, 'r', encoding='utf-8') as mf:
             existing = sum(1 for _ in mf)

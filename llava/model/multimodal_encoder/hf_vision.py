@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
+from transformers import (AutoConfig, AutoImageProcessor, AutoModel,
+                          CLIPImageProcessor)
 
-from transformers import AutoModel, AutoImageProcessor, AutoConfig, CLIPImageProcessor
 from llava.utils import rank0_print
 
 

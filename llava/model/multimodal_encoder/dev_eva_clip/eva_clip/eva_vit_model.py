@@ -3,6 +3,7 @@
 # --------------------------------------------------------
 import math
 import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,12 +13,13 @@ try:
 except:
     from timm.layers import drop_path, to_2tuple, trunc_normal_
 
-from .transformer import PatchDropout
 from .rope import VisionRotaryEmbedding, VisionRotaryEmbeddingFast
+from .transformer import PatchDropout
 
 if os.getenv("ENV_TYPE") == "deepspeed":
     try:
-        from deepspeed.runtime.activation_checkpointing.checkpointing import checkpoint
+        from deepspeed.runtime.activation_checkpointing.checkpointing import \
+            checkpoint
     except:
         from torch.utils.checkpoint import checkpoint
 else:

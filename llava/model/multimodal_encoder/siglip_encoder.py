@@ -2,32 +2,27 @@
 # Adapted from https://huggingface.co/MILVLG/imp-v1-3b/blob/main/vision_encoder.py
 """
 
-from typing import Optional, Tuple, Union, Dict
+import os
 from dataclasses import dataclass
 from functools import partial, reduce
-from PIL import Image
+from typing import Dict, Optional, Tuple, Union
+
 import torch
 import torch.utils.checkpoint
+from PIL import Image
 from torch import nn
-import os
-from transformers.image_processing_utils import BatchFeature, get_size_dict
-from transformers.image_transforms import (
-    convert_to_rgb,
-    normalize,
-    rescale,
-    resize,
-    to_channel_dimension_format,
-)
-from transformers.image_utils import (
-    ChannelDimension,
-    PILImageResampling,
-    to_numpy_array,
-)
-from transformers.activations import ACT2FN
-from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling
-from transformers.modeling_utils import PreTrainedModel
 from transformers import PretrainedConfig
+from transformers.activations import ACT2FN
+from transformers.image_processing_utils import BatchFeature, get_size_dict
+from transformers.image_transforms import (convert_to_rgb, normalize, rescale,
+                                           resize, to_channel_dimension_format)
+from transformers.image_utils import (ChannelDimension, PILImageResampling,
+                                      to_numpy_array)
+from transformers.modeling_outputs import (BaseModelOutput,
+                                           BaseModelOutputWithPooling)
+from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import ModelOutput
+
 from llava.utils import rank0_print
 
 

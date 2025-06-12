@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
+from transformers import CLIPImageProcessor, CLIPVisionConfig, CLIPVisionModel
+
 from llava.utils import rank0_print
-from transformers import CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig
 
 try:
     from s2wrapper import forward as multiscale_forward

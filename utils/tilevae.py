@@ -58,15 +58,15 @@
 # -------------------------------------------------------------------------
 
 import gc
-from time import time
 import math
-from tqdm import tqdm
+from time import time
 
 import torch
-import torch.version
 import torch.nn.functional as F
-from einops import rearrange
+import torch.version
 from diffusers.utils.import_utils import is_xformers_available
+from einops import rearrange
+from tqdm import tqdm
 
 import utils.devices as devices
 

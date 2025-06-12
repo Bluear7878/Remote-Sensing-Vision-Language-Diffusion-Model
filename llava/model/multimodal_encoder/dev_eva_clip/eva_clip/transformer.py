@@ -1,8 +1,9 @@
-import os
 import logging
-from collections import OrderedDict
 import math
+import os
+from collections import OrderedDict
 from typing import Callable, Optional, Sequence
+
 import numpy as np
 import torch
 from torch import nn
@@ -19,7 +20,8 @@ from .utils import to_2tuple
 if os.getenv("ENV_TYPE") == "deepspeed":
     try:
         import deepspeed
-        from deepspeed.runtime.activation_checkpointing.checkpointing import checkpoint
+        from deepspeed.runtime.activation_checkpointing.checkpointing import \
+            checkpoint
     except:
         print("Please 'pip install deepspeed'")
         deepspeed = None

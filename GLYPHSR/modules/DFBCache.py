@@ -1,9 +1,10 @@
-import functools
-import torch
 import contextlib
 import dataclasses
+import functools
 from collections import defaultdict
-from typing import Any, Dict, DefaultDict, Optional, Tuple, Union
+from typing import Any, DefaultDict, Dict, Optional, Tuple, Union
+
+import torch
 
 VERBOSE_SIMILARITY = False
 
@@ -66,9 +67,11 @@ class MyCacheContext:
 
     def set_buffer(self, name, val):
         self._buffers[name] = val
-    
+
 
 from contextlib import contextmanager
+
+
 @contextmanager
 def FBTransformerCacheContext():
     old_ctx = get_current_cache_context()
@@ -90,7 +93,7 @@ def set_buffer(name, buffer):
     cache_context = get_current_cache_context()
     assert cache_context is not None, "cache_context must be set before"
     cache_context.set_buffer(name, buffer)
-    
+
 
 @torch.compiler.disable
 def are_two_tensors_similar(t1, t2, *, threshold, parallelized=False):
@@ -114,7 +117,7 @@ def get_can_use_cache_multi(first_residual: torch.Tensor, threshold: float, para
     #prev_first = get_buffer("hidden_states_residual_multi")
     context = get_current_cache_context()
     prev_first = context.prev
-    
+
     if prev_first is not None:
         use_cache, diff = are_two_tensors_similar(
             prev_first,
@@ -124,8 +127,8 @@ def get_can_use_cache_multi(first_residual: torch.Tensor, threshold: float, para
         )
     else:
         return False,threshold
-    
+
     if use_cache:
         return use_cache,diff
-    
+
     return False,diff

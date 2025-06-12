@@ -5,16 +5,18 @@
 #  --save_dir "./results/SR3_RSSCN7_28_224_sample"
 # coding: utf-8
 
-import os
-import json
 import argparse
 import gc
-import torch
-from tqdm import tqdm
-from PIL import Image
+import json
+import os
 
-from GLYPHSR.util          import *
-from Texture_eval_mk       import *
+import torch
+from PIL import Image
+from tqdm import tqdm
+
+from GLYPHSR.util import *
+from Texture_eval_mk import *
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -181,7 +183,7 @@ def main():
     # Load SUPIR model once
     SR_model = create_SR_model(args.supir_yaml, SUPIR_sign='Q')
     SR_model.to(args.sr_device)
-    
+
     # Retrieve the sampling function from the SR model
     sample_function = getattr(SR_model, "just_sampling", None)
     if sample_function is None:

@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 
+from llava.utils import rank0_print
+
 from .eva_clip_processors import EvaClipImageTrainProcessor
 from .eva_vit import EVAEncoderWrapper
-from .factory import list_models, add_model_config, get_model_config
-
-from llava.utils import rank0_print
+from .factory import add_model_config, get_model_config, list_models
 
 
 class EvaClipVisionTower(nn.Module):

@@ -1,29 +1,22 @@
-import os
-import torch
-import re
-import math
-import torch.nn.functional as F
-import json
-import cv2
-import numpy as np
-from PIL import Image
-from torch.nn.functional import interpolate
-from omegaconf import OmegaConf
-from sgm.util import instantiate_from_config
-import os
-import torch
-import numpy as np
-import cv2
-from PIL import Image
-from torch.nn.functional import interpolate
-from omegaconf import OmegaConf
-from sgm.util import instantiate_from_config
 import copy
+import json
+import math
+import os
 import re
 import string
+
+import cv2
+import numpy as np
 import torch
+import torch.nn.functional as F
+from omegaconf import OmegaConf
+from PIL import Image
+from torch.nn.functional import interpolate
+
+from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.mm_utils import tokenizer_image_token
-from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
+from sgm.util import instantiate_from_config
+
 
 def get_img_describe(
     image_tensor,
@@ -37,27 +30,27 @@ def get_img_describe(
     num_beams=1,
     temperature = 0.2,
     do_sample=True,
-    max_new_tokens=512,     
+    max_new_tokens=512,
     device="cuda"
 ):
     question = prompt
-    
+
     conv = copy.deepcopy(conv_templates[conv_template])
     conv.tokenizer = tokenizer
     conv.append_message(conv.roles[0], question)
     conv.append_message(conv.roles[1], None)
-    
+
     prompt_question = conv.get_prompt()
-    
+
     input_ids = tokenizer_image_token(
         prompt_question,
         tokenizer,
         image_token_index,
         return_tensors="pt"
     ).unsqueeze(0).to(device)
-    
+
     image_sizes = [image.size]
-    
+
     with torch.inference_mode():
         outputs = model.generate(
         input_ids,
@@ -70,11 +63,11 @@ def get_img_describe(
         return_dict_in_generate=True,
         output_scores=True
     )
-    
+
     generated_output = outputs[0][0].cpu().tolist()
     image_caption = tokenizer.decode(generated_output, skip_special_tokens=True)
     image_caption = [image_caption.lstrip()]
-    
+
     return image_caption
 
 def get_state_dict(d):
@@ -170,7 +163,7 @@ def beam_search_topk_per_step(step_topk, beam_size):
         beam = new_beam[:beam_size]
 
     return beam
-    
+
 def get_beam_search_results(outputs, tokenizer, top_k, beams_num):
 
     token_probs = []
@@ -203,7 +196,7 @@ def get_beam_search_results(outputs, tokenizer, top_k, beams_num):
 
     # Combine all lines into a single prompt string.
     prompt = " ".join(prompt_lines)
-    
+
     return token_probs, beam_results_list,prompt
 
 

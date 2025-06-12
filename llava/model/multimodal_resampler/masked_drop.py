@@ -1,7 +1,7 @@
+import random
+
 import torch
 import torch.nn as nn
-
-import random
 
 
 class MaskedDrop(nn.Module):

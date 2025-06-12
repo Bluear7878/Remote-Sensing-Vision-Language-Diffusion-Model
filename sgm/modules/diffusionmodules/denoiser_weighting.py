@@ -1,5 +1,6 @@
 import torch
 
+
 class UnitWeighting:
     def __call__(self, sigma):
         return torch.ones_like(sigma, device=sigma.device)
@@ -21,4 +22,3 @@ class VWeighting(EDMWeighting):
 class EpsWeighting:
     def __call__(self, sigma):
         return sigma**-2
-

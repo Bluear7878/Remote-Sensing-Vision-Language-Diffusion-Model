@@ -5,22 +5,23 @@
 #  --save_dir "./results"
 # coding: utf-8
 
-import os
-import gc
-import yaml
 import argparse
-import torch
-from tqdm import tqdm
-from PIL import Image
+import gc
+import os
 import time
 
-from llava.mm_utils      import process_images
-from llava.constants     import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
-from llava.conversation  import conv_templates
+import torch
+import yaml
+from PIL import Image
+from tqdm import tqdm
 
-from GLYPHSR.util          import *
-from GLYPHSR.dataloader    import *
-from Texture_eval_mk       import *
+from GLYPHSR.dataloader import *
+from GLYPHSR.util import *
+from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
+from llava.conversation import conv_templates
+from llava.mm_utils import process_images
+from Texture_eval_mk import *
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -197,7 +198,7 @@ def main():
     if not image_paths:
         print(f"No valid images found in the specified directory: {args.image_dir}")
         return
-    
+
     # Retrieve the sampling function from the SR model
     sample_function = getattr(SR_model, "just_sampling", None)
     if sample_function is None:
@@ -217,7 +218,7 @@ def main():
             _img.to(dtype=torch.float16, device=args.base_device)
             for _img in image_tensor
         ]
-        
+
         # Convert PIL image to low-resolution tensor for SUPIR
         LQ_img, h0, w0 = PIL2Tensor(
             image,

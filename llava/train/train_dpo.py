@@ -14,48 +14,50 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import os
+import ast
 import copy
-import deepspeed
-from dataclasses import dataclass, field
 import json
 import logging
-import pathlib
-from typing import Dict, Optional, Sequence, List
-import ast
-
-import yaml
-import time
-import random
-import yaml
 import math
+import os
+import pathlib
+import pickle
+import random
 import re
-import torch
+import time
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Sequence
 
-import transformers
+import deepspeed
 import tokenizers
-
-from llava.constants import IGNORE_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN, IMAGE_TOKEN_INDEX
+import torch
+import transformers
+import yaml
+from data_processing.utils import load_json, load_jsonl
+from decord import VideoReader, cpu
+from PIL import Image, ImageFile
 from torch.utils.data import Dataset
-from llava.train.llava_trainer import LLaVADPOTrainer
-from data_processing.utils import load_jsonl, load_json
+from transformers import AutoConfig
+from trl.trainer.utils import DPODataCollatorWithPadding
+
 from llava import conversation as conversation_lib
+from llava.constants import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
+                             DEFAULT_IMAGE_TOKEN, IGNORE_INDEX,
+                             IMAGE_TOKEN_INDEX)
+from llava.mm_utils import (process_anyres_image, process_highres_image,
+                            process_highres_image_crop_split,
+                            tokenizer_image_token)
 from llava.model import *
-from llava.model.language_model.llava_qwen import LlavaQwenConfig
 from llava.model.language_model.llava_llama import LlavaConfig
 from llava.model.language_model.llava_mistral import LlavaMistralConfig
-from llava.mm_utils import process_highres_image, process_anyres_image, process_highres_image_crop_split, tokenizer_image_token
+from llava.model.language_model.llava_qwen import LlavaQwenConfig
+from llava.train.llava_trainer import LLaVADPOTrainer
 from llava.utils import rank0_print
-from transformers import AutoConfig
-import pickle
-
-from trl.trainer.utils import DPODataCollatorWithPadding
-from PIL import Image, ImageFile
-from decord import VideoReader, cpu
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-from packaging import version
 from typing import Any
+
+from packaging import version
 
 local_rank = None
 import numpy as np
@@ -1389,7 +1391,8 @@ def get_model(model_args, training_args, bnb_model_from_pretrained_args):
                 low_cpu_mem_usage=False,
                 **customized_kwargs,
             )
-            from transformers.models.mixtral.modeling_mixtral import MixtralSparseMoeBlock
+            from transformers.models.mixtral.modeling_mixtral import \
+                MixtralSparseMoeBlock
 
             deepspeed.utils.set_z3_leaf_modules(model, [MixtralSparseMoeBlock])
         elif "mistral" in model_args.model_name_or_path.lower() or "zephyr" in model_args.model_name_or_path.lower():
@@ -1439,7 +1442,8 @@ def get_model(model_args, training_args, bnb_model_from_pretrained_args):
                     low_cpu_mem_usage=False,
                     **customized_kwargs,
                 )
-                from transformers.models.qwen2_moe.modeling_qwen2_moe import Qwen2MoeSparseMoeBlock
+                from transformers.models.qwen2_moe.modeling_qwen2_moe import \
+                    Qwen2MoeSparseMoeBlock
 
                 deepspeed.utils.set_z3_leaf_modules(model, [Qwen2MoeSparseMoeBlock])
             else:

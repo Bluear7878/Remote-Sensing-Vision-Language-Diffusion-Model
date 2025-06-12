@@ -1,13 +1,14 @@
 import json
-from pathlib import Path
-from PIL import Image, ImageFilter
 import os
-import re
-from datasets import Dataset, DatasetDict
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 import random
+import re
+from pathlib import Path
+
+import torch
+from datasets import Dataset, DatasetDict
+from PIL import Image, ImageFilter
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 
 # ─── Define Prompt ─────────────────────────────────────────
 HQ_PROMPT = (
@@ -49,7 +50,7 @@ class HQLQDataset(Dataset):
              transforms.Normalize(
                 mean=[0.5, 0.5, 0.5],
                 std =[0.5, 0.5, 0.5]
-            ), 
+            ),
         ])
 
         self.degrade = transforms.Compose([
@@ -57,14 +58,14 @@ class HQLQDataset(Dataset):
             transforms.Resize(img_size,   interpolation=transforms.InterpolationMode.BICUBIC),
         ])
         self.blur = lambda img: img.filter(ImageFilter.GaussianBlur(radius=2))
-        
+
         #self.degrade_factors   = [10,11,12,13,14,15]
         self.degrade_factors   = [4,5,6,7,8,9]
         self.blur_radius_range = (0.5, 2.5)
 
         self.hq_base = Path(hq_meta_path).parent
         self.rows = []
-        
+
         unwanted = [
             "realistic photograph",
             "35 mm film style",
@@ -144,14 +145,14 @@ class HQLQDataset(Dataset):
         img = Image.open(rec["path"]).convert("RGB")
 
         if rec["type"].endswith("_LQ"):
- 
+
             factor = random.choice(self.degrade_factors)
             small  = img.resize((self.img_size//factor, self.img_size//factor), Image.BICUBIC)
             img    = small.resize((self.img_size, self.img_size), Image.BICUBIC)
 
             radius = random.uniform(*self.blur_radius_range)
             img    = img.filter(ImageFilter.GaussianBlur(radius=radius))
-            
+
         tensor = self.to_tensor(img)
         return {
             "input_tensor": tensor,
@@ -190,7 +191,7 @@ def make_hqlq_dataloader(
             "SR_OCR":      [b["SR_OCR"] for b in batch],
         }
     )
-    
+
 ####VLM FT####
 def parse_icdar2017(gt_dir: str, img_dir: str):
     """
@@ -199,7 +200,7 @@ def parse_icdar2017(gt_dir: str, img_dir: str):
     Args:
       gt_dir (str): ground truth txt 파일들이 위치한 디렉토리 (예: "/NasData/datasets/ICDAR2017/train/gt")
       img_dir (str): 이미지 파일들이 위치한 디렉토리 (예: "/NasData/datasets/ICDAR2017/train/img")
-    
+
     Returns:
       List[dict]: 각 샘플은 다음과 같은 형태의 딕셔너리
          {
@@ -210,7 +211,7 @@ def parse_icdar2017(gt_dir: str, img_dir: str):
          (필요하다면 bbox, language도 추가 가능)
     """
     samples = []
-    
+
     for file in os.listdir(img_dir):
         if file.lower().endswith(".jpg"):
             img_path = os.path.join(img_dir, file)
@@ -227,20 +228,20 @@ def parse_icdar2017(gt_dir: str, img_dir: str):
                         line = line.strip()
                         if not line:
                             continue  # Ignore blank lines
-                        
+
                         tokens = [token.strip() for token in line.split(',')]
                         if len(tokens) < 10:
                             # need at least 10 items, including 8 bounding boxes, language, and text.
                             print(f"Warning: gt file {gt_path} line doesn't have enough tokens: {line}")
                             continue
-                        
+
                         # tokens[:8] => bbox coordinate, tokens[8] => language, tokens[9] => recognized_text
                         recognized_text_line = tokens[9]
-                        
+
                         # Treat placeholders such as `###` as empty strings because they contain no actual text.
                         if recognized_text_line == '###':
                             recognized_text_line = ''
-                        
+
                         recognized_lines.append(recognized_text_line)
 
             # Concatenate text read from multiple lines with newline characters
@@ -249,7 +250,7 @@ def parse_icdar2017(gt_dir: str, img_dir: str):
             full_text = re.sub(r'\n+', '\n', full_text)
             # Remove unnecessary \n from front and back
             full_text = full_text.strip()
-            
+
             sample = {
                 "image_path": img_path,
                 "ocr_text": full_text

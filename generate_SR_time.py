@@ -5,18 +5,19 @@
 #  --save_dir "./results/SR3_RSSCN7_28_224_sample"
 # coding: utf-8
 
-import os
-import json
 import argparse
 import gc
-import torch
-from tqdm import tqdm
-from PIL import Image
-import time
 import json
+import os
+import time
 
-from GLYPHSR.util          import *
-from Texture_eval_mk       import *
+import torch
+from PIL import Image
+from tqdm import tqdm
+
+from GLYPHSR.util import *
+from Texture_eval_mk import *
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -163,10 +164,10 @@ def main():
 
     # Ensure SR output directory exists
     os.makedirs(args.save_dir, exist_ok=True)
-    
-    # 
-    total_time = 0.0  
-    n_images = 0  
+
+    #
+    total_time = 0.0
+    n_images = 0
 
     json_path = "/home/ict04/ocr_sr/KMK/Models/infer_time"
 
@@ -192,7 +193,7 @@ def main():
     # Load SUPIR model once
     SR_model = create_SR_model(args.supir_yaml, SUPIR_sign='Q')
     SR_model.to(args.sr_device)
-    
+
     # Retrieve the sampling function from the SR model
     sample_function = getattr(SR_model, "just_sampling", None)
     if sample_function is None:
@@ -278,7 +279,7 @@ def main():
     print("SR processing complete. Outputs saved to:")
     print(f"  ▶ {args.save_dir}")
 
-    log_json_file.close() 
+    log_json_file.close()
 
 if __name__ == "__main__":
     main()

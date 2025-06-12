@@ -13,20 +13,20 @@
 #    limitations under the License.
 
 
-from typing import List, Optional, Tuple, Union, Dict
+from typing import Dict, List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
-from torch.nn import CrossEntropyLoss
-
 import transformers
-from transformers import AutoConfig, AutoModelForCausalLM, LlamaConfig, LlamaModel, LlamaForCausalLM
-
-from transformers.modeling_outputs import CausalLMOutputWithPast
+from torch.nn import CrossEntropyLoss
+from transformers import (AutoConfig, AutoModelForCausalLM, LlamaConfig,
+                          LlamaForCausalLM, LlamaModel, Qwen2Config,
+                          Qwen2ForCausalLM, Qwen2Model)
 from transformers.generation.utils import GenerateOutput
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
 # from ...constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
-from llava.model.llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
-from transformers import Qwen2Config, Qwen2Model, Qwen2ForCausalLM
+from llava.model.llava_arch import LlavaMetaForCausalLM, LlavaMetaModel
 
 # from .qwen.modeling_qwen import QWenLMHeadModel, QWenModel
 # from .qwen.configuration_qwen import QWenConfig

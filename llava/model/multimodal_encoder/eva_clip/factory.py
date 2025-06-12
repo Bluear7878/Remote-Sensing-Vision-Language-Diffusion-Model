@@ -5,7 +5,8 @@ import pathlib
 import re
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional, Tuple, Union, Dict, Any
+from typing import Any, Dict, Optional, Tuple, Union
+
 import torch
 
 _MODEL_CONFIG_PATHS = [Path(__file__).parent / f"model_configs/"]

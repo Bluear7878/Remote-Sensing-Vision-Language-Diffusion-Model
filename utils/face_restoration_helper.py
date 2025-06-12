@@ -1,12 +1,12 @@
+import os
+
 import cv2
 import numpy as np
-import os
 import torch
-from torchvision.transforms.functional import normalize
-
 from facexlib.detection import init_detection_model
 from facexlib.parsing import init_parsing_model
 from facexlib.utils.misc import img2tensor, imwrite
+from torchvision.transforms.functional import normalize
 
 from .file import load_file_from_url
 

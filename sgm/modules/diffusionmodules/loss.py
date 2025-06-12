@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 from omegaconf import ListConfig
 
-from ...util import append_dims, instantiate_from_config
 from ...modules.autoencoding.lpips.loss.lpips import LPIPS
+from ...util import append_dims, instantiate_from_config
 
 
 class StandardDiffusionLoss(nn.Module):

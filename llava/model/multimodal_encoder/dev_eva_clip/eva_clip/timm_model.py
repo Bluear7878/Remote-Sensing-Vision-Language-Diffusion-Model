@@ -15,12 +15,13 @@ try:
 
     try:
         # old timm imports < 0.8.1
+        from timm.models.layers.attention_pool2d import \
+            AttentionPool2d as AbsAttentionPool2d
         from timm.models.layers.attention_pool2d import RotAttentionPool2d
-        from timm.models.layers.attention_pool2d import AttentionPool2d as AbsAttentionPool2d
     except ImportError:
         # new timm imports >= 0.8.1
-        from timm.layers import RotAttentionPool2d
         from timm.layers import AttentionPool2d as AbsAttentionPool2d
+        from timm.layers import RotAttentionPool2d
 except ImportError:
     timm = None
 
@@ -85,7 +86,7 @@ class TimmModel(nn.Module):
             # NOTE: partial freeze requires latest timm (master) branch and is subject to change
             try:
                 # FIXME import here until API stable and in an official release
-                from timm.models.helpers import group_parameters, group_modules
+                from timm.models.helpers import group_modules, group_parameters
             except ImportError:
                 raise RuntimeError("Please install latest timm `pip install git+https://github.com/rwightman/pytorch-image-models`")
             matcher = self.trunk.group_matcher()

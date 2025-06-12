@@ -37,4 +37,3 @@ class DiscreteSampling:
                 torch.randint(self.idx_range[0], self.idx_range[1], (n_samples,)),
             )
         return self.idx_to_sigma(idx)
-

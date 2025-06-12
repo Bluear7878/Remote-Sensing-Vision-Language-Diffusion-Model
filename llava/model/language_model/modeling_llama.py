@@ -27,30 +27,25 @@ import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache, StaticCache
-from transformers.modeling_outputs import (
-    BaseModelOutputWithPast,
-    CausalLMOutputWithPast,
-    QuestionAnsweringModelOutput,
-    SequenceClassifierOutputWithPast,
-)
+from transformers.modeling_outputs import (BaseModelOutputWithPast,
+                                           CausalLMOutputWithPast,
+                                           QuestionAnsweringModelOutput,
+                                           SequenceClassifierOutputWithPast)
 from transformers.modeling_utils import PreTrainedModel
-from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
-from transformers.utils import (
-    add_start_docstrings,
-    add_start_docstrings_to_model_forward,
-    is_flash_attn_2_available,
-    is_flash_attn_greater_or_equal_2_10,
-    logging,
-    replace_return_docstrings,
-)
 from transformers.models.llama.configuration_llama import LlamaConfig
+from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
+from transformers.utils import (add_start_docstrings,
+                                add_start_docstrings_to_model_forward,
+                                is_flash_attn_2_available,
+                                is_flash_attn_greater_or_equal_2_10, logging,
+                                replace_return_docstrings)
 
 if is_flash_attn_2_available():
     from flash_attn import flash_attn_func, flash_attn_varlen_func
-    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
+    from flash_attn.bert_padding import (index_first_axis, pad_input,  # noqa
+                                         unpad_input)
 
 
 logger = logging.get_logger(__name__)
@@ -826,7 +821,8 @@ class LlamaSdpaAttention(LlamaAttention):
 
 
 try:
-    from ring_flash_attn import zigzag_ring_flash_attn_qkvpacked_func, zigzag_ring_flash_attn_varlen_func
+    from ring_flash_attn import (zigzag_ring_flash_attn_qkvpacked_func,
+                                 zigzag_ring_flash_attn_varlen_func)
 except ImportError:
     print("Please install the ring-flash-attn package")
 

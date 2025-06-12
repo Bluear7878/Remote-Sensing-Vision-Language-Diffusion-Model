@@ -1,25 +1,30 @@
+import datetime
 import os
+from datetime import timedelta
+from typing import List, Optional
+
 import torch
 import torch.nn as nn
-import datetime
-
 from accelerate import Accelerator
-from accelerate.utils import InitProcessGroupKwargs, GradientAccumulationPlugin
-from torch.utils.data import Dataset, Sampler, DataLoader
-
+from accelerate.utils import GradientAccumulationPlugin, InitProcessGroupKwargs
+from torch.utils.data import DataLoader, Dataset, Sampler
+from transformers import Trainer
+from transformers.trainer import (ALL_LAYERNORM_LAYERS,
+                                  GradientAccumulationPlugin,
+                                  get_parameter_names, has_length,
+                                  is_accelerate_available,
+                                  is_datasets_available,
+                                  is_sagemaker_mp_enabled, logger)
+from transformers.trainer_pt_utils import AcceleratorConfig
+from transformers.trainer_pt_utils import \
+    get_length_grouped_indices as get_length_grouped_indices_hf
+from transformers.trainer_utils import seed_worker
 from trl.trainer import DPOTrainer
 from trl.trainer.utils import DPODataCollatorWithPadding
 
-from transformers import Trainer
-from transformers.trainer import is_sagemaker_mp_enabled, get_parameter_names, has_length, ALL_LAYERNORM_LAYERS, logger, is_accelerate_available, is_datasets_available, GradientAccumulationPlugin
-from transformers.trainer_utils import seed_worker
-from transformers.trainer_pt_utils import get_length_grouped_indices as get_length_grouped_indices_hf
-from transformers.trainer_pt_utils import AcceleratorConfig
-from typing import List, Optional
-from datetime import timedelta
-
 if is_accelerate_available():
-    from accelerate import Accelerator, skip_first_batches, InitProcessGroupKwargs
+    from accelerate import (Accelerator, InitProcessGroupKwargs,
+                            skip_first_batches)
 
 if is_datasets_available():
     import datasets

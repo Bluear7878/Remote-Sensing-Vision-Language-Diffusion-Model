@@ -2,11 +2,13 @@
 # Adapted from https://github.com/baaivision/EVA/tree/master/EVA-CLIP
 """
 
-from math import pi
-import torch
-from torch import nn
-from einops import rearrange, repeat
 import logging
+from math import pi
+
+import torch
+from einops import rearrange, repeat
+from torch import nn
+
 from llava.utils import rank0_print
 
 
@@ -143,6 +145,7 @@ class PatchDropout(nn.Module):
 # --------------------------------------------------------
 import math
 import os
+
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -153,7 +156,8 @@ except:
 
 if os.getenv("ENV_TYPE") == "deepspeed":
     try:
-        from deepspeed.runtime.activation_checkpointing.checkpointing import checkpoint
+        from deepspeed.runtime.activation_checkpointing.checkpointing import \
+            checkpoint
     except:
         from torch.utils.checkpoint import checkpoint
 else:

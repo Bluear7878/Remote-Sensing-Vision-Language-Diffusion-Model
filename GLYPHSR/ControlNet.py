@@ -1,23 +1,23 @@
 import os
-import torch, torch.nn as nn
-from copy import deepcopy
 from contextlib import contextmanager
-from diffusers.models.controlnet import ControlNetOutput
-from omegaconf import OmegaConf
-from sgm.util import instantiate_from_config
-from sgm.models.diffusion import DiffusionEngine
-from diffusers.models.controlnet import ControlNetOutput
+from copy import deepcopy
+
+import lpips
+import torch
+import torch.nn as nn
+import torchmetrics
+import torchmetrics.functional as TMF
+import torchvision.transforms.functional as TF
 from accelerate.logging import get_logger
 from accelerate.utils import set_seed
-import torchmetrics
-from sgm.modules.diffusionmodules.denoiser import *
-from copy import deepcopy
-from contextlib import contextmanager
 from diffusers.models.controlnet import ControlNetOutput
+from omegaconf import OmegaConf
+
 from GLYPHSR.SR_model import *
-import torchvision.transforms.functional as TF
-import torchmetrics.functional as TMF
-import lpips
+from sgm.models.diffusion import DiffusionEngine
+from sgm.modules.diffusionmodules.denoiser import *
+from sgm.util import instantiate_from_config
+
 
 # Recursively move tensors inside nested structures to the target device
 def _tree_to(obj, *, device=None):
@@ -81,7 +81,7 @@ class ProjectTSControlNet(nn.Module):
 
         for m in self.project_modules:
             m.requires_grad_(True)
-            m.eval()                    
+            m.eval()
 
     # Forward pass combining base output with delta from project modules
     def forward(self, *args, **kwargs):
@@ -103,7 +103,7 @@ class ProjectTSControlNet(nn.Module):
         for m in self.project_modules:
             m.train(mode)
 
-# Extract the state_dict field if present in checkpoint dict  
+# Extract the state_dict field if present in checkpoint dict
 def get_state_dict(d): return d.get('state_dict', d)
 
 # Load checkpoint from .pt or .safetensors and return state dict
@@ -127,7 +127,7 @@ def load_TS_pretrained_model(model, ckpt_path,device, strict=False):
 
     model.to(device)
     return model
-    
+
 # Build TS ControlNet with configs, scheduler, and optional pretrained weights
 def load_TS_ControlNet(
         cfg_path,
@@ -143,15 +143,15 @@ def load_TS_ControlNet(
     cfg   = OmegaConf.load(cfg_path)
 
     SR_backbone = instantiate_from_config(cfg.model).cpu()
-    
-        
+
+
     if cfg.SDXL_CKPT is not None:
         SR_backbone.load_state_dict(load_state_dict(cfg.SDXL_CKPT), strict=False)
     if cfg.SUPIR_CKPT is not None:
         SR_backbone.load_state_dict(load_state_dict(cfg.SUPIR_CKPT), strict=False)
     if sign is not None:
         SR_backbone.load_state_dict(load_state_dict(cfg.SUPIR_CKPT_Q), strict=False)
-        
+
     SR_backbone.eval().to(device)
 
     base_unet = SR_backbone.model.diffusion_model
@@ -163,7 +163,7 @@ def load_TS_ControlNet(
         p.requires_grad_(True)
 
     trainable = SR_backbone.model.diffusion_model.project_modules.parameters()
-    
+
     if loss_fn_config == None:
         loss_fn_config = {
         "target": "sgm.modules.diffusionmodules.loss.StandardDiffusionLoss",
@@ -197,14 +197,14 @@ def load_TS_ControlNet(
     }
     SR_backbone.learning_rate = 1e-6
     SR_backbone.input_key = "input_tensor"
-    
+
     if loss_fn_config is not None:
         SR_backbone.loss_fn = instantiate_from_config(loss_fn_config)
     if optimizer_config is not None:
         SR_backbone.optimizer_config = optimizer_config
     if scheduler_config is not None:
         SR_backbone.scheduler_config = scheduler_config
-    
+
     SR_backbone.upscale = 2
     SR_backbone.min_size = 256
     SR_backbone.val_sample_kwargs = {
@@ -224,7 +224,7 @@ def load_TS_ControlNet(
         "cfg_scale_start":            args.spt_linear_CFG,
         "control_scale_start":        args.spt_linear_s_stage2,
     }
-    
+
     if pretrained is not None:
         SR_backbone = load_TS_pretrained_model(SR_backbone, pretrained, device=device, strict=False)
         print(f"Loaded {pretrained} to {SR_backbone.__class__.__name__}")

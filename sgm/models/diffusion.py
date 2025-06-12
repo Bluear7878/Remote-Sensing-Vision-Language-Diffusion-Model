@@ -1,22 +1,20 @@
 from contextlib import contextmanager
 from typing import Any, Dict, List, Tuple, Union
-from sgm.modules.distributions.distributions import DiagonalGaussianDistribution
+
 import pytorch_lightning as pl
 import torch
 from omegaconf import ListConfig, OmegaConf
 from safetensors.torch import load_file as load_safetensors
 from torch.optim.lr_scheduler import LambdaLR
 
+from sgm.modules.distributions.distributions import \
+    DiagonalGaussianDistribution
+
 from ..modules import UNCONDITIONAL_CONFIG
 from ..modules.diffusionmodules.wrappers import OPENAIUNETWRAPPER
 from ..modules.ema import LitEma
-from ..util import (
-    default,
-    disabled_train,
-    get_obj_from_str,
-    instantiate_from_config,
-    log_txt_as_img,
-)
+from ..util import (default, disabled_train, get_obj_from_str,
+                    instantiate_from_config, log_txt_as_img)
 
 
 class DiffusionEngine(pl.LightningModule):
@@ -122,7 +120,7 @@ class DiffusionEngine(pl.LightningModule):
         with torch.autocast("cuda", enabled=not self.disable_first_stage_autocast):
             out = self.first_stage_model.decode(z)
         return out
-    
+
     @torch.no_grad()
     def encode_first_stage_with_denoise(self, x, use_sample=True, is_stage1=False):
         with torch.amp.autocast('cuda'):
@@ -155,14 +153,14 @@ class DiffusionEngine(pl.LightningModule):
     def shared_step(self, batch: Dict) -> Any:
         x_ori = self.get_input(batch)
         device = x_ori.device
-        
+
         _z = self.encode_first_stage_with_denoise(x_ori, use_sample=False)
-        
+
         x_stage1 = self.decode_first_stage(_z)
         x = self.encode_first_stage(x_stage1)
-        
+
         N = _z.shape[0]
-        
+
         batch["global_step"] = self.global_step
         batch["original_size_as_tuple"] = (
             torch.tensor([1024, 1024], dtype=torch.int32, device=device)
@@ -185,7 +183,7 @@ class DiffusionEngine(pl.LightningModule):
         #    torch.tensor([1.0] * N,  device=device).unsqueeze(-1)
         #)
         batch["control_scale"] = torch.tensor([1.0],  device=device).unsqueeze(-1)
-        
+
         loss, loss_dict = self(x, batch)
         return loss, loss_dict
 

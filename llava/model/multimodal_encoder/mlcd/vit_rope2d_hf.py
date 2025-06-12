@@ -167,7 +167,7 @@ class MLCDEncoderLayer(nn.Module):
         residual = hidden_states
 
         hidden_states = self.layer_norm1(hidden_states)
-        
+
         hidden_states = self.self_attn(
             hidden_states=hidden_states,
             rotary_pos_emb=rotary_pos_emb,

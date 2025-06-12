@@ -6,31 +6,36 @@ LAVA_FT_PATH    = "/home/ict04/ocr_sr/HSJ/aSUPTextIR_proj/SUPIR/CKPT_PTH/Llava-n
 DEFAULT_SUPIR_YAML = "./options/SUPIR_v0_juggernautXL.yaml"
 PROMPT_YAML     = "/home/ict04/ocr_sr/Texture/Prompt/prompt_config.yaml"
 
+import argparse
+import csv
+import gc
 # ───────────────────────────────────────────────────────────────
 # 1) import & Config
 # ───────────────────────────────────────────────────────────────
-import os, gc, csv, yaml, argparse, lpips
-import torch, torchmetrics.functional as TMF
-import torchvision.transforms.functional as TF
+import os
+from dataclasses import dataclass
 from pathlib import Path
-from dataclasses import dataclass
-from tqdm import tqdm
-from PIL import Image
 
+import lpips
+import torch
+import torchmetrics.functional as TMF
+import torchvision.transforms.functional as TF
+import yaml
 from omegaconf import OmegaConf
-from llava.model.builder import load_pretrained_model
-from llava.mm_utils      import process_images
-from llava.constants     import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
-from llava.conversation  import conv_templates
-from peft                import PeftModel
-from transformers        import BitsAndBytesConfig
+from peft import PeftModel
+from PIL import Image
+from tqdm import tqdm
+from transformers import BitsAndBytesConfig
 
-from GLYPHSR.util          import *
-from dataclasses import dataclass
 from GLYPHSR.ControlNet import *
 from GLYPHSR.dataloader import *
+from GLYPHSR.util import *
+from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
+from llava.mm_utils import process_images
+from llava.model.builder import load_pretrained_model
 from Texture_eval_mk import *
+
 
 @dataclass
 class Config:
@@ -86,7 +91,7 @@ args = Config(img_dir=".")
 PROMPT_YAML = "/home/ict04/ocr_sr/KMK/GYLPH-SR/prompts/prompt_config.yaml"
 with open(PROMPT_YAML, "r", encoding="utf-8") as f:
     PROMPTS = yaml.safe_load(f)
-    
+
 img_prompt = PROMPTS["img_prompt"].format(DEFAULT_IMAGE_TOKEN=DEFAULT_IMAGE_TOKEN)
 
 SUPIR_YAML = "/home/ict04/ocr_sr/KMK/GYLPH-SR/model_configs/juggernautXL.yaml"
@@ -99,8 +104,8 @@ image_files = ['/home/ict04/ocr_sr/KMK/GYLPH-SR/dataset/SR3_RSSCN7_28_224/result
 
 image_path = image_files[0]
 
-filename = os.path.basename(image_path)  
-name = os.path.splitext(filename)[0]    
+filename = os.path.basename(image_path)
+name = os.path.splitext(filename)[0]
 
 image = Image.open(image_path)
 width, height = image.size
@@ -110,10 +115,10 @@ image_tensor = process_images([image], image_processor, llava_model.config)
 image_tensor = [_image.to(dtype=torch.float16, device=BASE_MODEL_CUDA) for _image in image_tensor]
 
 image_caption = get_img_describe(
-        image_tensor=image_tensor, image=image, model=llava_model, 
+        image_tensor=image_tensor, image=image, model=llava_model,
         tokenizer=tokenizer, prompt = img_prompt,
         max_new_tokens = 256,
-        conv_templates=conv_templates, image_token_index=IMAGE_TOKEN_INDEX, 
+        conv_templates=conv_templates, image_token_index=IMAGE_TOKEN_INDEX,
         device=BASE_MODEL_CUDA
     )
 
@@ -123,7 +128,7 @@ LQ_img = LQ_img.unsqueeze(0).to(SR_MODEL_CUDA)[:, :3, :, :]
 sample_func = "just_sampling"
 sample_function = getattr(SR_model, sample_func, None)
 
-samples = sample_function(LQ_img, image_caption,img_threshold=0.1, dec_img=1, # img_threshold = 0.1 -> 0.15 -> 0.2 dec_img = 1 
+samples = sample_function(LQ_img, image_caption,img_threshold=0.1, dec_img=1, # img_threshold = 0.1 -> 0.15 -> 0.2 dec_img = 1
                           num_steps=50, restoration_scale=args.s_stage1, s_churn=args.s_churn,
                                     s_noise=args.s_noise, cfg_scale=args.s_cfg, control_scale=args.s_stage2, seed=args.seed,
                                     num_samples=args.num_samples, p_p=args.a_prompt, n_p=args.n_prompt, color_fix_type=args.color_fix_type,

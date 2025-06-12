@@ -10,29 +10,20 @@ import torch.nn as nn
 from einops import rearrange, repeat
 from omegaconf import ListConfig
 from torch.utils.checkpoint import checkpoint
-from transformers import (
-    ByT5Tokenizer,
-    CLIPTextModel,
-    CLIPTokenizer,
-    T5EncoderModel,
-    T5Tokenizer,
-)
+from transformers import (ByT5Tokenizer, CLIPTextModel, CLIPTokenizer,
+                          T5EncoderModel, T5Tokenizer)
+
+from CKPT_PTH import SDXL_CLIP1_PATH, SDXL_CLIP2_CKPT_PTH
 
 from ...modules.autoencoding.regularizers import DiagonalGaussianRegularizer
 from ...modules.diffusionmodules.model import Encoder
 from ...modules.diffusionmodules.openaimodel import Timestep
-from ...modules.diffusionmodules.util import extract_into_tensor, make_beta_schedule
+from ...modules.diffusionmodules.util import (extract_into_tensor,
+                                              make_beta_schedule)
 from ...modules.distributions.distributions import DiagonalGaussianDistribution
-from ...util import (
-    autocast,
-    count_params,
-    default,
-    disabled_train,
-    expand_dims_like,
-    instantiate_from_config,
-)
+from ...util import (autocast, count_params, default, disabled_train,
+                     expand_dims_like, instantiate_from_config)
 
-from CKPT_PTH import SDXL_CLIP1_PATH, SDXL_CLIP2_CKPT_PTH
 
 class AbstractEmbModel(nn.Module):
     def __init__(self):
@@ -538,7 +529,7 @@ class FrozenOpenCLIPEmbedder2(AbstractEmbModel):
             device=torch.device("cpu"),
             pretrained='laion2b_s39b_b160k'
         )
-        
+
 
         del model.visual
         self.model = model
@@ -572,7 +563,7 @@ class FrozenOpenCLIPEmbedder2(AbstractEmbModel):
             assert not self.legacy
             return z[self.layer], z["pooled"]
         return z[self.layer]
-    
+
 
 
     def encode_with_transformer(self, text):
@@ -580,8 +571,8 @@ class FrozenOpenCLIPEmbedder2(AbstractEmbModel):
         x = x + self.model.positional_embedding
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.text_transformer_forward(x, attn_mask=self.model.attn_mask) #original
-       
-        
+
+
         if self.legacy:
             x = x[self.layer]
             x = self.model.ln_final(x)

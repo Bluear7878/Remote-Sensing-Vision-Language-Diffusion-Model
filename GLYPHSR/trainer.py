@@ -1,46 +1,40 @@
-import PIL
-import torch
-from llava.mm_utils import tokenizer_image_token, IMAGE_TOKEN_INDEX
-from llava.model.builder import load_pretrained_model
-from llava.mm_utils import get_model_name_from_path, process_images, tokenizer_image_token
-from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN, IGNORE_INDEX
-from llava.conversation import conv_templates, SeparatorStyle
-from typing import List, Dict
-from torchvision import transforms
-import io
-import PIL
-import random
-import math
-import torch.nn.functional as F
 import dataclasses
 import inspect
+import io
+import math
+import random
 import warnings
 from functools import wraps
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
+import PIL
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from accelerate.state import PartialState
 from datasets import Dataset
 from datasets.arrow_writer import SchemaInferenceError
 from datasets.builder import DatasetGenerationError
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    DataCollator,
-    DataCollatorForLanguageModeling,
-    PreTrainedModel,
-    PreTrainedTokenizerBase,
-    Trainer,
-    TrainingArguments,
-)
+from torchvision import transforms
+from transformers import (AutoModelForCausalLM, AutoTokenizer, DataCollator,
+                          DataCollatorForLanguageModeling, PreTrainedModel,
+                          PreTrainedTokenizerBase, Trainer, TrainingArguments)
 from transformers.modeling_utils import unwrap_model
 from transformers.trainer_callback import TrainerCallback
 from transformers.trainer_utils import EvalPrediction
 
+from llava.constants import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
+                             DEFAULT_IMAGE_TOKEN, IGNORE_INDEX,
+                             IMAGE_TOKEN_INDEX)
+from llava.conversation import SeparatorStyle, conv_templates
+from llava.mm_utils import (IMAGE_TOKEN_INDEX, get_model_name_from_path,
+                            process_images, tokenizer_image_token)
+from llava.model.builder import load_pretrained_model
+
 # Optional import for PEFT
 try:
-    from peft import PeftConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
+    from peft import (PeftConfig, PeftModel, get_peft_model,
+                      prepare_model_for_kbit_training)
     _peft_available = True
 except ImportError:
     PeftConfig = None
@@ -48,27 +42,27 @@ except ImportError:
     get_peft_model = None
     prepare_model_for_kbit_training = None
     _peft_available = False
-from GLYPHSR.extras.dataset_formatting import get_formatting_func_from_dataset
+from legacy.utils import (ConstantLengthDataset,
+                          DataCollatorForCompletionOnlyLM,
+                          neftune_post_forward_hook,
+                          peft_module_casting_to_bf16,
+                          trl_sanitze_kwargs_for_tagging)
 #from extras.dataset_formatting import get_formatting_func_from_dataset
 from SUPER_OCR.import_utils import is_peft_available
-from legacy.utils import (
-    ConstantLengthDataset,
-    DataCollatorForCompletionOnlyLM,
-    neftune_post_forward_hook,
-    peft_module_casting_to_bf16,
-    trl_sanitze_kwargs_for_tagging,
-)
+
+from GLYPHSR.extras.dataset_formatting import get_formatting_func_from_dataset
+
 
 def degrade_jpeg(image: PIL.Image.Image, min_quality=30, max_quality=70) -> PIL.Image.Image:
     buffer = io.BytesIO()
-    
+
     # random quality setting
     q = random.randint(min_quality, max_quality)
-    
+
     # JPEG encoding
     image.save(buffer, format="JPEG", quality=q)
     buffer.seek(0)
-    
+
     # Reload PIL image
     degraded = PIL.Image.open(buffer).convert("RGB")
     return degraded
@@ -108,7 +102,7 @@ def build_instruction_data_v2(samples):
             "3. If the entire text is unreadable, provide your best guess in square brackets, such as '[unreadable text]'.\n"
             "4. Do NOT provide any additional commentary or explanation. Return only the transcribed or guessed text.\n"
         )
-        
+
 
         assistant_answer = s['ocr_text'].strip()
 
@@ -148,7 +142,7 @@ def preprocess_function(example, tokenizer, model, image_processor, apply_augmen
     transforms.Resize(224),
     transforms.RandomApply([
         transforms.Lambda(lambda img: degrade_jpeg(img, min_quality=min_quality, max_quality=max_quality))
-    ], p=0.99),  
+    ], p=0.99),
     ])
 
     try:
@@ -162,10 +156,10 @@ def preprocess_function(example, tokenizer, model, image_processor, apply_augmen
     except Exception as e:
         print("Error processing:", image_path, e)
         return {}
-        
+
 
     image_tensor_list = process_images([image], image_processor, model.config)
-    pixel_values = image_tensor_list[0]  
+    pixel_values = image_tensor_list[0]
     pixel_values = pixel_values.to(torch.float16)
     #pixel_values_np = pixel_values.cpu().numpy()
 
@@ -175,7 +169,7 @@ def preprocess_function(example, tokenizer, model, image_processor, apply_augmen
         prompt_text,
         tokenizer,
         IMAGE_TOKEN_INDEX,
-        return_tensors="pt"  
+        return_tensors="pt"
     )
 
     full_text = prompt_text + "\n" + example["assistant_answer"]
@@ -194,13 +188,13 @@ def preprocess_function(example, tokenizer, model, image_processor, apply_augmen
     labels[:prompt_len] = -100
 
     return {
-        "pixel_values": pixel_values,  
+        "pixel_values": pixel_values,
         "image_size": (h, w),
-        "input_ids": full_ids,         
+        "input_ids": full_ids,
         "labels": labels,
-        "answers":example["assistant_answer"]             
+        "answers":example["assistant_answer"]
     }
-    
+
 
 
 def multimodal_collator(features, tokenizer):
@@ -209,7 +203,7 @@ def multimodal_collator(features, tokenizer):
     for f in features:
         pixel_values_list.append(torch.tensor(f["pixel_values"], dtype=torch.float16))
         image_sizes.append(f["image_size"])
-        
+
     batch_pixel_values = torch.stack(pixel_values_list, dim=0)
 
 
@@ -241,13 +235,13 @@ def multimodal_collator(features, tokenizer):
     input_ids_tensor = torch.tensor(padded_input_ids, dtype=torch.long)
     labels_tensor = torch.tensor(padded_labels, dtype=torch.long)
     attention_mask_tensor = torch.tensor(attention_masks, dtype=torch.long)
-    
+
 
     batch = {
         "input_ids": input_ids_tensor,
         "attention_mask": attention_mask_tensor,
         "labels": labels_tensor,
-        "images": batch_pixel_values,  
+        "images": batch_pixel_values,
         "image_sizes": image_sizes,
     }
     return batch
@@ -306,7 +300,7 @@ class CustomSFTTrainer(Trainer):
         if formatting_func is None and dataset_text_field is None:
             formatting_func = get_formatting_func_from_dataset(train_dataset, tokenizer)
 
-        
+
 
         if tokenizer.padding_side != "right":
             warnings.warn(
@@ -356,12 +350,12 @@ class CustomSFTTrainer(Trainer):
             del embeddings.neftune_noise_alpha
 
         return output
-    
+
     '''
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
         outputs = model(**inputs)
 
-        # Instead of "labels" being a single ID, 
+        # Instead of "labels" being a single ID,
         # assume we created 'soft_labels' that has shape [batch_size, seq_len, vocab_size]
         soft_labels = inputs.get("labels", None)  # each row is a distribution over the vocab
 
@@ -374,7 +368,7 @@ class CustomSFTTrainer(Trainer):
         # We apply a soft cross-entropy or KL
         log_probs = torch.log_softmax(logits, dim=-1)  # shape: [batch_size, seq_len, vocab_size]
         loss_per_token = -torch.sum(soft_labels * log_probs, dim=-1)  # shape [batch_size, seq_len]
-        
+
         # We can ignore padding positions or positions that are -100
         mask = (soft_labels.sum(dim=-1) > 0).float()  # if distribution is all zero => ignore
         final_loss = (loss_per_token * mask).sum() / (mask.sum() + 1e-8)
@@ -382,13 +376,13 @@ class CustomSFTTrainer(Trainer):
         return (final_loss, outputs) if return_outputs else final_loss
     '''
 
-    
+
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
         labels = inputs.get("labels", None)
         outputs = model(**inputs)
         loss = outputs.loss
         return (loss, outputs) if return_outputs else loss
-    
+
 
 
     def _trl_activate_neftune(self, model):
@@ -405,8 +399,3 @@ class CustomSFTTrainer(Trainer):
         hook_handle = embeddings.register_forward_hook(neftune_post_forward_hook)
         self.neftune_hook_handle = hook_handle
         return model
-    
-    
-    
-    
-    

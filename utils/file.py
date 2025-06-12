@@ -1,7 +1,7 @@
 import os
 from typing import List, Tuple
-
 from urllib.parse import urlparse
+
 from torch.hub import download_url_to_file, get_dir
 
 

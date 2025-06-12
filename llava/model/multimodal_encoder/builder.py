@@ -1,11 +1,12 @@
 import os
-from .clip_encoder import CLIPVisionTower
-from .imagebind import ImageBindWrapper
-from .open_clip_encoder import OpenCLIPVisionTower
-from .hf_vision import HFVisionTower
-from .siglip_encoder import SigLipVisionTower
+
 from .clip_encoder import CLIPVisionTower, CLIPVisionTowerS2
+from .hf_vision import HFVisionTower
+from .imagebind import ImageBindWrapper
 from .mlcd_encoder import MLCDVisionTower, MLCDVisionTowerS2
+from .open_clip_encoder import OpenCLIPVisionTower
+from .siglip_encoder import SigLipVisionTower
+
 # from .eva_clip.eva_clip_encoder import EvaClipVisionTower
 # from .dev_eva_clip.eva_vit import EvaViTWrapper
 

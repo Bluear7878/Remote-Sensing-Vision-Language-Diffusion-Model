@@ -5,8 +5,8 @@ Adapted from https://github.com/openai/CLIP. Originally MIT License, Copyright (
 
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
 from functools import partial
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -17,10 +17,11 @@ try:
     from .hf_model import HFTextEncoder
 except:
     HFTextEncoder = None
+from .eva_vit_model import EVAVisionTransformer
 from .modified_resnet import ModifiedResNet
 from .timm_model import TimmModel
-from .eva_vit_model import EVAVisionTransformer
-from .transformer import LayerNorm, QuickGELU, Attention, VisionTransformer, TextTransformer
+from .transformer import (Attention, LayerNorm, QuickGELU, TextTransformer,
+                          VisionTransformer)
 
 try:
     from apex.normalization import FusedLayerNorm
