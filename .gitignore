@@ -1,4 +1,4 @@
 dataset/
 results/
-
+.results/
 *.ipynb
