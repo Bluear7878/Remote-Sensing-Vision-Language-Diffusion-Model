@@ -51,6 +51,10 @@ def get_img_describe(
 
     image_sizes = [image.size]
 
+    print("Model device:", next(model.parameters()).device)
+    print("Input_ids device:", input_ids.device)
+
+
     with torch.inference_mode():
         outputs = model.generate(
         input_ids,

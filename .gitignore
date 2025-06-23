@@ -2,3 +2,5 @@ dataset/
 results/
 .results/
 *.ipynb
+experiments/
+checkpoint/

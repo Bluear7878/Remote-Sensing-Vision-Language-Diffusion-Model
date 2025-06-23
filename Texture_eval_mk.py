@@ -1,6 +1,6 @@
 LAVA_BASE_MODEL = "lmms-lab/llama3-llava-next-8b"
-LAVA_FT_PATH    = "/home/ict04/ocr_sr/HSJ/aSUPTextIR_proj/SUPIR/CKPT_PTH/Llava-next"
-PROMPT_YAML     = "/home/ict04/ocr_sr/Texture/Prompt/prompt_config.yaml"
+LAVA_FT_PATH    = "/home/delta1/TEXTURE-Diffusion-Based-Super-Resolution-Model-for-Enhanced-TEXT-Clarity/CKPT_PTH/Llava-next"
+PROMPT_YAML     = "/home/delta1/Texture/Prompt/prompt_config.yaml"
 
 import argparse
 import csv
