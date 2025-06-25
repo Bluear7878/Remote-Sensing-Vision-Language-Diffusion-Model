@@ -59,9 +59,9 @@ To run inference on a single image:
 python infer.py --input_img path/to/your/image.png --output path/to/save/results --upscale 8
 ```
 
-`--input_img` : path to a low-resolution input image (e.g., ./data/lr/image1.png)
-`--output path` : directory where the super-resolved image will be saved (e.g., ./results)
-`--upscale` : upscaling factor (e.g., 2, 4, 8)
+-`--input_img` : path to a low-resolution input image (e.g., ./data/lr/image1.png)
+-`--output path` : directory where the super-resolved image will be saved (e.g., ./results)
+-`--upscale` : upscaling factor (e.g., 2, 4, 8)
 
 ### Inference on Image Folder
 
@@ -69,6 +69,6 @@ python infer.py --input_img path/to/your/image.png --output path/to/save/results
 python infer_dir.py --image_dir path/to/input/image_folder --save_dir path/to/save/results --upscale 8
 ```
 
-` --image_dir` : directory containing low-resolution input images (e.g.,/data/lr)
-`--save_dir` : directory where the super-resolved image will be saved (e.g., ./results)
-`--upscale` : upscaling factor (e.g., 2, 4, 8)
+-` --image_dir` : directory containing low-resolution input images (e.g.,/data/lr)
+-`--save_dir` : directory where the super-resolved image will be saved (e.g., ./results)
+-`--upscale` : upscaling factor (e.g., 2, 4, 8)
