@@ -1,14 +1,11 @@
 # env : llama3_metrics
 #python infer.py --input_img /home/delta1/GMK/raw_data/WHU-RS19_28_224/lr_28/viaduct_23.png
 #               --output ./results
-#               --scale 8
+#               --upscale 8
 
 SR_MODEL_CUDA   = "cuda:0"
 BASE_MODEL_CUDA = "cuda:1"
 
-#LAVA_BASE_MODEL = "lmms-lab/llama3-llava-next-8b"
-#LAVA_FT_PATH    = "/home/ict04/ocr_sr/HSJ/aSUPTextIR_proj/SUPIR/CKPT_PTH/Llava-next"
-#DEFAULT_SUPIR_YAML = "./options/SUPIR_v0_juggernautXL.yaml"
 PROMPT_YAML = "./prompts/prompt_config.yaml"
 SUPIR_YAML = "./model_configs/juggernautXL.yaml"
 
@@ -187,8 +184,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_img", type=str, required=True, help="Path to input image")
     parser.add_argument("--output", type=str, default="./results", help="Directory to save outputs")
-    parser.add_argument("--scale", type=int, default=8, help="Upscaling factor applied to the input image before super-resolution")
+    parser.add_argument("--upscale", type=int, default=8, help="Upscaling factor applied to the input image before super-resolution")
 
     args = parser.parse_args()
 
-    pipeline(args.input_img, args.output, args.scale)
+    pipeline(args.input_img, args.output, args.upscale)
