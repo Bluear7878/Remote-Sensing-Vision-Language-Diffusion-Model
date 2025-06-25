@@ -70,9 +70,6 @@ class DDPM(BaseModel):
                 self.SR = self.netG.super_resolution(
                     self.data['SR'], continous)
         self.netG.train()
-        print("Input tensor stats (SR):", self.data['SR'].min(), self.data['SR'].max())
-        print("Output tensor stats (SR):", self.SR.min(), self.SR.max())
-
 
     def sample(self, batch_size=1, continous=False):
         self.netG.eval()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# env : llama3_ft
+# env : llama3_metrics
 # python3 infer_dir.py \
 #  --image_dir "/home/ict04/ocr_sr/KMK/GYLPH-SR/dataset/SR3_RSSCN7_28_224/results" \
 #  --save_dir "./results"
@@ -15,6 +15,12 @@ import yaml
 from PIL import Image
 from tqdm import tqdm
 
+import data as Data
+import data.single_img as Single_Img
+import SR3.config.sr3 as SR3
+import SR3.model as sr3_model
+import SR3.utill.logger as Logger
+import SR3.utill.tensor2img as T2I
 from GLYPHSR.dataloader import *
 from GLYPHSR.util import *
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
@@ -42,13 +48,13 @@ def parse_args():
     parser.add_argument(
         "--supir_yaml",
         type=str,
-        default="/home/ict04/ocr_sr/KMK/GYLPH-SR/model_configs/juggernautXL.yaml",
+        default="/home/delta1/GMK/Texture/model_configs/juggernautXL.yaml",
         help="Path to the SUPIR model configuration YAML file"
     )
     parser.add_argument(
         "--prompt_yaml",
         type=str,
-        default="/home/ict04/ocr_sr/KMK/GYLPH-SR/prompts/prompt_config.yaml",
+        default="/home/delta1/GMK/Texture/prompts/prompt_config.yaml",
         help="Path to the YAML file containing caption prompt settings"
     )
     parser.add_argument(
@@ -171,9 +177,19 @@ def parse_args():
 
 def main():
     args = parse_args()
+    sr3_args = SR3.SR3_Config()
+    sr3_opt = Logger.parse(sr3_args)
 
-    # Create the save directory if it does not exist
-    os.makedirs(args.save_dir, exist_ok=True)
+    output_dir = os.path.join(args.save_dir,"output")
+    sr3_output_dir = os.path.join(args.save_dir,"sr3_output")
+
+    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(sr3_output_dir , exist_ok=True)
+
+    # Load SR3 model for super-resolution
+    diffusion = sr3_model.create_model(sr3_opt)
+    diffusion.set_new_noise_schedule(
+        sr3_opt['model']['beta_schedule']['val'], schedule_phase='val')
 
     # Load caption prompt settings from YAML
     with open(args.prompt_yaml, "r", encoding="utf-8") as f:
@@ -206,14 +222,29 @@ def main():
 
     # Process each image: generate caption and perform SR
     for image_path in tqdm(image_paths, desc="Processing images"):
+
         filename = os.path.basename(image_path)
         name, _ = os.path.splitext(filename)
 
         # Load original image as PIL Image
-        image = Image.open(image_path).convert("RGB")
+        #image = Image.open(image_path).convert("RGB")
+
+        # img_data
+        loader = Single_Img.single_image_dataloader(
+            image_path, args.upscale)
+        for val_data in loader:
+            diffusion.feed_data(val_data)
+
+        # Generate sr3 image
+        diffusion.test(continous=True)
+        sr_tensor = diffusion.SR
+        if sr_tensor.dim() == 4:
+            sr_tensor = sr_tensor[-1]
+        sr_img_np = T2I.tensor2img(sr_tensor, min_max=(-1, 1))
+        sr_pil = Image.fromarray(sr_img_np)
 
         # Prepare input tensor for LLAVA captioning
-        image_tensor = process_images([image], image_processor, llava_model.config)
+        image_tensor = process_images([sr_pil], image_processor, llava_model.config)
         image_tensor = [
             _img.to(dtype=torch.float16, device=args.base_device)
             for _img in image_tensor
@@ -221,8 +252,8 @@ def main():
 
         # Convert PIL image to low-resolution tensor for SUPIR
         LQ_img, h0, w0 = PIL2Tensor(
-            image,
-            upscale=args.upscale,
+            sr_pil,
+            upscale=1,
             min_size=args.min_size
         )
         LQ_img = LQ_img.unsqueeze(0).to(args.sr_device)[:, :3, :, :]
@@ -231,7 +262,7 @@ def main():
         with torch.no_grad():
             image_caption = get_img_describe(
                 image_tensor=image_tensor,
-                image=image,
+                image=sr_pil,
                 model=llava_model,
                 tokenizer=tokenizer,
                 prompt=img_prompt,
@@ -246,8 +277,8 @@ def main():
             samples = sample_function(
                 LQ_img,
                 image_caption,
-                img_threshold=0.1,
-                dec_img=0.99,
+                img_threshold=0.3,
+                dec_img=1.0,
                 num_steps=args.num_steps,
                 restoration_scale=args.s_stage1,
                 s_churn=args.s_churn,
@@ -268,8 +299,12 @@ def main():
         # Save each generated SR sample to disk
         for idx, sample in enumerate(samples):
             output_filename = f"{name}_{idx}.png"
-            output_path = os.path.join(args.save_dir, output_filename)
+            output_sr3_filename = f"sr3_{name}_{idx}.png"
+            output_path = os.path.join(output_dir, output_filename)
+            sr3_output_path = os.path.join(sr3_output_dir, output_sr3_filename)
+
             Tensor2PIL(sample, h0, w0).save(output_path)
+            sr_pil.save(sr3_output_path)
 
         # Clear GPU memory
         torch.cuda.empty_cache()
