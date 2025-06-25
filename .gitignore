@@ -4,3 +4,4 @@ results/
 *.ipynb
 experiments/
 checkpoint/
+CKPT_PTH/

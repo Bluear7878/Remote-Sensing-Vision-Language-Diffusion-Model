@@ -23,13 +23,13 @@ from PIL import Image
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig
 
-from GLYPHSR.ControlNet import *
-from GLYPHSR.dataloader import *
-from GLYPHSR.util import PIL2Tensor, Tensor2PIL
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
 from llava.model.builder import load_pretrained_model
+from models.ControlNet import *
+from models.dataloader import *
+from models.util import PIL2Tensor, Tensor2PIL
 
 
 @dataclass

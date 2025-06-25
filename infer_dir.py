@@ -15,17 +15,17 @@ import yaml
 from PIL import Image
 from tqdm import tqdm
 
+import configs.sr3 as SR3
 import data as Data
 import data.single_img as Single_Img
-import SR3.config.sr3 as SR3
-import SR3.model as sr3_model
-import SR3.utill.logger as Logger
-import SR3.utill.tensor2img as T2I
-from GLYPHSR.dataloader import *
-from GLYPHSR.util import *
+import models.sr3_model as sr3_model
+import utils.logger as Logger
+import utils.tensor2img as T2I
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
+from models.dataloader import *
+from models.util import *
 from Texture_eval_mk import *
 
 
@@ -48,13 +48,13 @@ def parse_args():
     parser.add_argument(
         "--supir_yaml",
         type=str,
-        default="/home/delta1/GMK/Texture/model_configs/juggernautXL.yaml",
+        default="./model_configs/juggernautXL.yaml",
         help="Path to the SUPIR model configuration YAML file"
     )
     parser.add_argument(
         "--prompt_yaml",
         type=str,
-        default="/home/delta1/GMK/Texture/prompts/prompt_config.yaml",
+        default="./prompts/prompt_config.yaml",
         help="Path to the YAML file containing caption prompt settings"
     )
     parser.add_argument(

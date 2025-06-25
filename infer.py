@@ -9,8 +9,8 @@ BASE_MODEL_CUDA = "cuda:1"
 #LAVA_BASE_MODEL = "lmms-lab/llama3-llava-next-8b"
 #LAVA_FT_PATH    = "/home/ict04/ocr_sr/HSJ/aSUPTextIR_proj/SUPIR/CKPT_PTH/Llava-next"
 #DEFAULT_SUPIR_YAML = "./options/SUPIR_v0_juggernautXL.yaml"
-PROMPT_YAML = "/home/delta1/GMK/Texture/prompts/prompt_config.yaml"
-SUPIR_YAML = "/home/delta1/GMK/Texture/model_configs/juggernautXL.yaml"
+PROMPT_YAML = "./prompts/prompt_config.yaml"
+SUPIR_YAML = "./model_configs/juggernautXL.yaml"
 
 import argparse
 import csv
@@ -34,19 +34,19 @@ from PIL import Image
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig
 
+import configs.sr3 as SR3
 import data as Data
 import data.single_img as Single_Img
-import SR3.config.sr3 as SR3
-import SR3.model as sr3_model
-import SR3.utill.logger as Logger
-import SR3.utill.tensor2img as T2I
-from GLYPHSR.ControlNet import *
-from GLYPHSR.dataloader import *
-from GLYPHSR.util import *
+import models.sr3_model as sr3_model
+import utils.logger as Logger
+import utils.tensor2img as T2I
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
 from llava.model.builder import load_pretrained_model
+from models.ControlNet import *
+from models.dataloader import *
+from models.util import *
 from Texture_eval_mk import *
 
 
@@ -180,36 +180,6 @@ def pipeline(input_img_path, output_dir,scale):
             output_path = os.path.join(output_dir, f"{filename}.png")
             Tensor2PIL(sample, h0, w0).save(output_path)
             print(f"Saved result: {output_path}")
-
-    #image_files = ['/home/ict04/ocr_sr/KMK/GYLPH-SR/dataset/SR3_RSSCN7_28_224/results/0_83_sr.png']
-
-    #image_path = image_files[0]
-
-    #filename = os.path.basename(image_path)
-    #name = os.path.splitext(filename)[0]
-    #name = "test"
-    #image = Image.open(image_path)
-    #width, height = sr_pil.size
-    #image_sizes = [sr_pil.size]
-    input_tensor = image_tensor[0]  # shape: [3, H, W] or [1, 3, H, W]
-    if input_tensor.dim() == 4:
-        input_tensor = input_tensor[0]  # Remove batch dim
-
-    output_tensor = samples[0]  # shape: [3, H, W] (이미 batch 제거됨)
-
-    # clamp to same range if needed (optional)
-    input_tensor = input_tensor.float().cpu()
-    output_tensor = output_tensor.float().cpu()
-
-    print("📥 Input tensor stats (image_tensor):")
-    print("  min:", input_tensor.min().item(), "max:", input_tensor.max().item())
-    print("📤 Output tensor stats (samples):")
-    print("  min:", output_tensor.min().item(), "max:", output_tensor.max().item())
-    print(infer_time)
-
-
-
-
 
 
 

@@ -2,9 +2,10 @@ import logging
 import os
 from collections import OrderedDict
 
-import model.networks as networks
 import torch
 import torch.nn as nn
+
+import models.sr3_model.networks as networks
 
 from .base_model import BaseModel
 
@@ -152,6 +153,7 @@ class DDPM(BaseModel):
                 'Loading pretrained model for G [{:s}] ...'.format(load_path))
             gen_path = '{}_gen.pth'.format(load_path)
             opt_path = '{}_opt.pth'.format(load_path)
+            print("==============================",gen_path)
             # gen
             network = self.netG
             if isinstance(self.netG, nn.DataParallel):

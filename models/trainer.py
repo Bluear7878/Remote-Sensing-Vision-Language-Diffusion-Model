@@ -42,6 +42,7 @@ except ImportError:
     get_peft_model = None
     prepare_model_for_kbit_training = None
     _peft_available = False
+from GLYPHSR.extras.dataset_formatting import get_formatting_func_from_dataset
 from legacy.utils import (ConstantLengthDataset,
                           DataCollatorForCompletionOnlyLM,
                           neftune_post_forward_hook,
@@ -49,8 +50,6 @@ from legacy.utils import (ConstantLengthDataset,
                           trl_sanitze_kwargs_for_tagging)
 #from extras.dataset_formatting import get_formatting_func_from_dataset
 from SUPER_OCR.import_utils import is_peft_available
-
-from GLYPHSR.extras.dataset_formatting import get_formatting_func_from_dataset
 
 
 def degrade_jpeg(image: PIL.Image.Image, min_quality=30, max_quality=70) -> PIL.Image.Image:

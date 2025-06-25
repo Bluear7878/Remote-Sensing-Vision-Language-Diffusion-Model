@@ -9,7 +9,7 @@
         "tb_logger": "tb_logger",
         "results": "results",
         "checkpoint": "checkpoint",
-        "resume_state": null
+        "resume_state": "models/sr3_model/checkpoint/I1000000_E800"
         // "resume_state": "experiments/sr_sr3_XXXXXX_XXXXXX/checkpoint/I1000000_E200" //pretrain model or training state
     },
     "datasets": {
@@ -28,7 +28,7 @@
         "val": {
             "name": "RSSCN7",
             "mode": "LRHR",
-            "dataroot": "dataset/RSSCN7val_28_224",
+            "dataroot": "/home/delta1/GMK/raw_data/RSC11_28_224",
             "datatype": "img",
             "l_resolution": 28,
             "r_resolution": 224,
@@ -64,7 +64,7 @@
             },
             "val": {
                 "schedule": "linear",
-                "n_timestep": 2000,
+                "n_timestep": 500,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             }

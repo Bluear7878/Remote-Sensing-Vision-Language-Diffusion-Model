@@ -10,8 +10,8 @@ import torchvision.transforms.functional as TF
 from pytorch_lightning import seed_everything
 from torch.nn.functional import interpolate
 
-from GLYPHSR.modules.DFBCache import *
-from GLYPHSR.util import PIL2Tensor, Tensor2PIL, convert_dtype, degrade_image
+from models.modules.DFBCache import *
+from models.util import PIL2Tensor, Tensor2PIL, convert_dtype, degrade_image
 from sgm.models.diffusion import DiffusionEngine
 from sgm.modules.distributions.distributions import \
     DiagonalGaussianDistribution

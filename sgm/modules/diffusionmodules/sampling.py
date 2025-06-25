@@ -10,7 +10,7 @@ from k_diffusion.sampling import BrownianTreeNoiseSampler, get_sigmas_karras
 from omegaconf import ListConfig, OmegaConf
 from tqdm import tqdm
 
-from GLYPHSR.modules.DFBCache import *
+from models.modules.DFBCache import *
 
 from ...modules.diffusionmodules.sampling_utils import (get_ancestral_step,
                                                         linear_multistep_coeff,

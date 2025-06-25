@@ -13,7 +13,7 @@ from accelerate.utils import set_seed
 from diffusers.models.controlnet import ControlNetOutput
 from omegaconf import OmegaConf
 
-from GLYPHSR.SR_model import *
+from models.SR_model import *
 from sgm.models.diffusion import DiffusionEngine
 from sgm.modules.diffusionmodules.denoiser import *
 from sgm.util import instantiate_from_config
