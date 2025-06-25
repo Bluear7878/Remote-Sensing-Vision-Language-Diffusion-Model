@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 import configs.sr3 as SR3
 import data as Data
-import data.single_img as Single_Img
+import data.dataset as SR_Dataset
 import models.sr3_model as sr3_model
 import utils.logger as Logger
 import utils.tensor2img as T2I
@@ -230,7 +230,7 @@ def main():
         #image = Image.open(image_path).convert("RGB")
 
         # img_data
-        loader = Single_Img.single_image_dataloader(
+        loader = SR_Dataset.dataloader(
             image_path, args.upscale)
         for val_data in loader:
             diffusion.feed_data(val_data)

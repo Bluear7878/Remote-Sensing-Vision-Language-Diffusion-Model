@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import functional as trans_fn
 
 
-class SingleImageDataset(Dataset):
+class SR_Dataset(Dataset):
     def __init__(self, image_path, scale=1, resample=Image.BICUBIC, transform=None):
         self.image_path = image_path
         self.scale = scale
@@ -27,12 +27,12 @@ class SingleImageDataset(Dataset):
         img = self.transform(self.resized_image)
         return {'SR': img, 'Index': 0}
 
-def single_image_dataloader(image_path, scale=1, resample=Image.BICUBIC):
+def dataloader(image_path, scale=1, resample=Image.BICUBIC):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5]*3, std=[0.5]*3)
     ])
-    dataset = SingleImageDataset(
+    dataset = SR_Dataset(
         image_path=image_path,
         scale=scale,
         resample=resample,

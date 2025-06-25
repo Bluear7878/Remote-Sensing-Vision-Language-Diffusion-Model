@@ -36,7 +36,7 @@ from transformers import BitsAndBytesConfig
 
 import configs.sr3 as SR3
 import data as Data
-import data.single_img as Single_Img
+import data.dataset as SR_Dataset
 import models.sr3_model as sr3_model
 import utils.logger as Logger
 import utils.tensor2img as T2I
@@ -117,7 +117,7 @@ def pipeline(input_img_path, output_dir,scale):
         sr3_opt['model']['beta_schedule']['val'], schedule_phase='val')
 
     # 3. Run SR3 Inference
-    loader = Single_Img.single_image_dataloader(
+    loader = SR_Dataset.dataloader(
         input_img_path, scale)
     for val_data in loader:
         diffusion.feed_data(val_data)
