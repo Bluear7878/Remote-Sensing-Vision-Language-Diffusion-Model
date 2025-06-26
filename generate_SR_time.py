@@ -32,13 +32,13 @@ def parse_args():
     parser.add_argument(
         "--supir_yaml",
         type=str,
-        default="/home/ict04/ocr_sr/KMK/GYLPH-SR/model_configs/juggernautXL.yaml",
+        default="/home/delta1/GMK/Texture/model_configs/juggernautXL.yaml",
         help="Path to the SUPIR model configuration YAML file"
     )
     parser.add_argument(
         "--prompt_yaml",
         type=str,
-        default="/home/ict04/ocr_sr/KMK/GYLPH-SR/prompts/prompt_config.yaml",
+        default="/home/delta1/GMK/Texture/prompts/prompt_config.yaml",
         help="Path to the YAML file containing caption prompt settings"
     )
     parser.add_argument(
@@ -169,9 +169,9 @@ def main():
     total_time = 0.0
     n_images = 0
 
-    json_path = "/home/ict04/ocr_sr/KMK/Models/infer_time"
+    json_path = "/home/delta1/GMK/infertime"
 
-    log_json_path = os.path.join(json_path, "0_0_ours_inference_0.1_log.jsonl")
+    log_json_path = os.path.join(json_path, "0_0_ours_4x_30step_-0.1_RSSCN7_log.jsonl")
     log_json_file = open(log_json_path, "a", encoding="utf-8")
 
     # Load JSONL metadata into a list of dicts

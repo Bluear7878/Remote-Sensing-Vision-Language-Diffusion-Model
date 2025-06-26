@@ -1,6 +1,6 @@
 LAVA_BASE_MODEL = "lmms-lab/llama3-llava-next-8b"
-LAVA_FT_PATH    = "/home/ict04/ocr_sr/HSJ/aSUPTextIR_proj/SUPIR/CKPT_PTH/Llava-next"
-PROMPT_YAML     = "/home/ict04/ocr_sr/Texture/Prompt/prompt_config.yaml"
+LAVA_FT_PATH    = "/home/delta1/TEXTURE-Diffusion-Based-Super-Resolution-Model-for-Enhanced-TEXT-Clarity/CKPT_PTH/Llava-next"
+PROMPT_YAML     = "/home/delta1/Texture/Prompt/prompt_config.yaml"
 
 import argparse
 import csv
@@ -23,13 +23,13 @@ from PIL import Image
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig
 
-from GLYPHSR.ControlNet import *
-from GLYPHSR.dataloader import *
-from GLYPHSR.util import PIL2Tensor, Tensor2PIL
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
 from llava.model.builder import load_pretrained_model
+from models.ControlNet import *
+from models.dataloader import *
+from models.util import PIL2Tensor, Tensor2PIL
 
 
 @dataclass

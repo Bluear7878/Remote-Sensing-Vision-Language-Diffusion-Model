@@ -2,3 +2,6 @@ dataset/
 results/
 .results/
 *.ipynb
+experiments/
+checkpoint/
+CKPT_PTH/
