@@ -49,6 +49,61 @@ scores—and in structural integrity while achieving robust per-formance. In par
 | | SUPIR | 0.2973 | **0.6078** |
 | | **Ours**| __**0.2400**__ | __**0.7497**__ |
 
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2">Model</th>
+      <th colspan="3">SMS ↓</th>
+      <th colspan="3">CLIP-IQA ↑</th>
+    </tr>
+    <tr>
+      <th>RSC11</th>
+      <th>RSSCN7</th>
+      <th>WHU-RS19</th>
+      <th>RSC11</th>
+      <th>RSSCN7</th>
+      <th>WHU-RS19</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ESRGAN</td>
+      <td>0.2788</td><td>0.2799</td><td>0.2822</td>
+      <td>0.3439</td><td>0.3145</td><td>0.3486</td>
+    </tr>
+    <tr>
+      <td>LWTDN</td>
+      <td>0.2819</td><td>0.2749</td><td>0.2663</td>
+      <td>0.5313</td><td>0.4745</td><td>0.5420</td>
+    </tr>
+    <tr>
+      <td>SRDiff</td>
+      <td>0.2997</td><td>0.3051</td><td>0.2987</td>
+      <td>0.3270</td><td>0.2995</td><td>0.3738</td>
+    </tr>
+    <tr>
+      <td>SRDDPM</td>
+      <td>0.2438</td><td>0.2352</td><td><b>0.2325</b></td>
+      <td>0.5551</td><td>0.4971</td><td>0.5618</td>
+    </tr>
+    <tr>
+      <td>SR3</td>
+      <td><b>0.2428</b></td><td><b>0.2317</b></td><td><b>0.2321</b></td>
+      <td>0.6035</td><td>0.5422</td><td>0.6068</td>
+    </tr>
+    <tr>
+      <td>SUPIR</td>
+      <td>0.2920</td><td>0.2714</td><td>0.2973</td>
+      <td><b>0.6360</b></td><td><b>0.6200</b></td><td><b>0.6078</b></td>
+    </tr>
+    <tr>
+      <td><b>Ours</b></td>
+      <td><b><u>0.2291</u></b></td><td><b><u>0.2337</u></b></td><td><b><u>0.2400</u></b></td>
+      <td><b><u>0.7842</u></b></td><td><b><u>0.7778</u></b></td><td><b><u>0.7497</u></b></td>
+    </tr>
+  </tbody>
+</table>
+
 ## Installation
 
 ```sh
