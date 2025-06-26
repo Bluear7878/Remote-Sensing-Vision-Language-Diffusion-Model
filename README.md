@@ -17,6 +17,10 @@ scores—and in structural integrity while achieving robust per-formance. In par
 
 ## Results
 
+![architecture](./assets/result1.png)
+
+![architecture](./assets/result2.png)
+
 | Dataset | Model | SMS↓ | CLIP-IQA↑ |
 |-----------|-----------|----------|-----------|
 | **RSC11** | ESRGAN | 0.2788 | 0.3439 |
