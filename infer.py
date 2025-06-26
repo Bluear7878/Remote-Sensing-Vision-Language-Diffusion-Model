@@ -6,8 +6,8 @@
 SR_MODEL_CUDA   = "cuda:0"
 BASE_MODEL_CUDA = "cuda:1"
 
-PROMPT_YAML = "./prompts/prompt_config.yaml"
-SUPIR_YAML = "./model_configs/juggernautXL.yaml"
+
+MODEL_YAML = "./model_configs/juggernautXL.yaml"
 
 import argparse
 import csv
@@ -101,6 +101,7 @@ def pipeline(input_img_path, output_dir,scale):
     basename = os.path.basename(input_img_path)
     filename = os.path.splitext(basename)[0]
     # 1. Load Prompt
+    PROMPT_YAML = "./prompts/prompt_config.yaml"
     with open(PROMPT_YAML, "r", encoding="utf-8") as f:
         PROMPTS = yaml.safe_load(f)
     img_prompt = PROMPTS["img_prompt"].format(DEFAULT_IMAGE_TOKEN=DEFAULT_IMAGE_TOKEN)
@@ -143,14 +144,14 @@ def pipeline(input_img_path, output_dir,scale):
         )
 
 
-    # 6. SR Refinement (SUPIR)
+    # 6. SR Refinement
 
     args = Config(img_dir=".")
 
     LQ_img, h0, w0 = PIL2Tensor(sr_pil, upscale=1, min_size=args.min_size)
     LQ_img = LQ_img.unsqueeze(0).to(SR_MODEL_CUDA)[:, :3, :, :]
 
-    SR_model = create_SR_model(SUPIR_YAML,SUPIR_sign='Q')
+    SR_model = create_SR_model(MODEL_YAML,'Q')
     SR_model.to(SR_MODEL_CUDA)
 
     sample_func = "just_sampling"

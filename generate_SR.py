@@ -14,7 +14,7 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 
-from GLYPHSR.util import *
+from models.util import *
 from Texture_eval_mk import *
 
 
@@ -29,15 +29,15 @@ def parse_args():
         help="Path to the JSONL file containing image paths and captions"
     )
     parser.add_argument(
-        "--supir_yaml",
+        "--model_yaml",
         type=str,
-        default="/home/ict04/ocr_sr/KMK/GYLPH-SR/model_configs/juggernautXL.yaml",
-        help="Path to the SUPIR model configuration YAML file"
+        default="./model_configs/juggernautXL.yaml",
+        help="Path to the model configuration YAML file"
     )
     parser.add_argument(
         "--prompt_yaml",
         type=str,
-        default="/home/ict04/ocr_sr/KMK/GYLPH-SR/prompts/prompt_config.yaml",
+        default="./prompts/prompt_config.yaml",
         help="Path to the YAML file containing caption prompt settings"
     )
     parser.add_argument(
@@ -68,37 +68,37 @@ def parse_args():
         "--s_stage1",
         type=int,
         default=-1,
-        help="Stage-1 restoration scale for SUPIR (default: -1)"
+        help="Stage-1 restoration scale (default: -1)"
     )
     parser.add_argument(
         "--s_churn",
         type=int,
         default=5,
-        help="Churn parameter for SUPIR (default: 5)"
+        help="Churn parameter (default: 5)"
     )
     parser.add_argument(
         "--s_noise",
         type=float,
         default=1.003,
-        help="Noise parameter for SUPIR (default: 1.003)"
+        help="Noise parameter (default: 1.003)"
     )
     parser.add_argument(
         "--s_cfg",
         type=float,
         default=7.5,
-        help="CFG scale parameter for SUPIR (default: 7.5)"
+        help="CFG scale parameter (default: 7.5)"
     )
     parser.add_argument(
         "--s_stage2",
         type=float,
         default=1.0,
-        help="Stage-2 control scale for SUPIR (default: 1.0)"
+        help="Stage-2 control scale (default: 1.0)"
     )
     parser.add_argument(
         "--num_steps",
         type=int,
         default=50,
-        help="Number of sampling steps for SUPIR (default: 50)"
+        help="Number of sampling steps (default: 50)"
     )
     parser.add_argument(
         "--num_samples",
@@ -115,7 +115,7 @@ def parse_args():
             "32k, Color Grading, ultra HD, extreme meticulous detailing of terrain textures and structures, "
             "hyper sharpness, no deformations."
         ),
-        help="Positive prompt string for SUPIR (default: cinematic style)"
+        help="Positive prompt string (default: cinematic style)"
     )
     parser.add_argument(
         "--n_prompt",
@@ -125,7 +125,7 @@ def parse_args():
             "3D render, unreal engine, blurring, dirty, messy, worst quality, low quality, frames, watermark, "
             "signature, jpeg artifacts, deformed, lowres, over-smooth, cloud cover, heavy fog, motion blur, lens flare"
         ),
-        help="Negative prompt string for SUPIR (default: standard negations)"
+        help="Negative prompt string (default: standard negations)"
     )
     parser.add_argument(
         "--color_fix_type",
@@ -180,8 +180,8 @@ def main():
         print(f"No valid metadata entries found in: {args.meta_jsonl}")
         return
 
-    # Load SUPIR model once
-    SR_model = create_SR_model(args.supir_yaml, SUPIR_sign='Q')
+    # Load model once
+    SR_model = create_SR_model(args.model_yaml, 'Q')
     SR_model.to(args.sr_device)
 
     # Retrieve the sampling function from the SR model
@@ -199,7 +199,7 @@ def main():
         # Load the low-resolution image
         image = Image.open(image_path).convert("RGB")
 
-        # Convert PIL image to low-resolution tensor for SUPIR
+        # Convert PIL image to low-resolution tensor
         LQ_img, h0, w0 = PIL2Tensor(
             image,
             upscale=args.upscale,
