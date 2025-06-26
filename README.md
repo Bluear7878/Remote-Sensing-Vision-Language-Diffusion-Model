@@ -75,7 +75,7 @@ scores—and in structural integrity while achieving robust per-formance. In par
     <tr>
       <td><b>Ours</b></td>
       <td style="color: red;"><b><u>0.2291</u></b></td><td style="color: blue;"><b>0.2337</b></td><td style="color: blue;"><b>0.2400</b></td>
-      <td style="color: red;"><b><u>0.7842</u></b></td><td style="color: red;"><b><u>0.7778</u></b></td><td style="color: red;"><b><u>0.7497</u></b></td>
+      <td><b><u><span style="color:red">0.7842<span></u></b></td><td style="color: red;"><b><u>0.7778</u></b></td><td style="color: red;"><b><u>0.7497</u></b></td>
     </tr>
   </tbody>
 </table>
