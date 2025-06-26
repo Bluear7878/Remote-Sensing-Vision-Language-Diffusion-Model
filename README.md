@@ -17,7 +17,11 @@ scores—and in structural integrity while achieving robust per-formance. In par
 
 ## Results
 
+### Visual Results: Ours vs Competing Methods
+
 ![architecture](./assets/result1.png)
+
+### Visual Results at Diffusion Steps
 
 ![architecture](./assets/result2.png)
 
