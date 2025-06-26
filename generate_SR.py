@@ -213,8 +213,8 @@ def main():
             samples = sample_function(
                 LQ_img,
                 caption,
-                img_threshold=-0.1,
-                dec_img=0.99,
+                img_threshold=0.3,
+                dec_img=1.0,
                 num_steps=args.num_steps,
                 restoration_scale=args.s_stage1,
                 s_churn=args.s_churn,

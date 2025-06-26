@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument(
         "--prompt_yaml",
         type=str,
-        default="./prompt_config.yaml",
+        default="./prompts/prompt_config.yaml",
         help="Path to the YAML file containing caption prompt settings"
     )
     parser.add_argument(

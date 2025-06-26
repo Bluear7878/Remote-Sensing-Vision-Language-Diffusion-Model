@@ -1,5 +1,5 @@
 # env : llama3_metrics
-#python infer.py --input_img /home/delta1/GMK/raw_data/WHU-RS19_28_224/lr_28/viaduct_23.png
+#python infer.py --input_img /LR/image/path
 #               --output ./results
 #               --upscale 8
 

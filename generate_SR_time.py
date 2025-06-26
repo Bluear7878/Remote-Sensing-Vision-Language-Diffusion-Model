@@ -169,9 +169,9 @@ def main():
     total_time = 0.0
     n_images = 0
 
-    json_path = "./results/infertime"
+    json_path = "./results"
 
-    log_json_path = os.path.join(json_path, "0_0_ours_4x_30step_-0.1_RSSCN7_log.jsonl")
+    log_json_path = os.path.join(json_path, "infer_test.jsonl")
     log_json_file = open(log_json_path, "a", encoding="utf-8")
 
     # Load JSONL metadata into a list of dicts

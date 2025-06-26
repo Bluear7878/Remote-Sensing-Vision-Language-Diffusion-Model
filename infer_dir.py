@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # env : llama3_metrics
 # python3 infer_dir.py \
-#  --image_dir "/home/ict04/ocr_sr/KMK/GYLPH-SR/dataset/SR3_RSSCN7_28_224/results" \
+#  --image_dir "LR/dataset/dir" \
 #  --save_dir "./results"
+#  --upscale 8
 # coding: utf-8
 
 import argparse
