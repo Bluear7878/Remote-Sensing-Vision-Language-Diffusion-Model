@@ -25,30 +25,6 @@ scores—and in structural integrity while achieving robust per-formance. In par
 
 ![architecture](./assets/result2.png)
 
-| Dataset | Model | SMS↓ | CLIP-IQA↑ |
-|-----------|-----------|----------|-----------|
-| **RSC11** | ESRGAN | 0.2788 | 0.3439 |
-| | LWTDN | 0.2819 | 0.5313 |
-| | SRDiff | 0.2997 | 0.3270 |
-| | SRDDPM | 0.2438 | 0.5551 |
-| | SR3 | **0.2428** | 0.6035 |
-| | SUPIR | 0.2920 | **0.6360** |
-| | **Ours** | __**0.2291**__ | __**0.7842**__ |
-| **RSSCN7** | ESRGAN | 0.2799 | 0.3145 |
-| | LWTDN | 0.2749 | 0.4745 |
-| | SRDiff | 0.3051 | 0.2995 |
-| | SRDDPM | 0.2352 | 0.4971 |
-| | SR3 | **0.2317** | 0.5422 |
-| | SUPIR | 0.2714 | **0.6200** |
-| | **Ours** | __**0.2337**__ | __**0.7778**__ |
-| **WHU-RS19** | ESRGAN | 0.2822 | 0.3486 |
-| | LWTDN | 0.2663 | 0.5420 |
-| | SRDiff | 0.2987 | 0.3738 |
-| | SRDDPM | 0.2325 | 0.5618 |
-| | SR3 | **0.2321** | 0.6068 |
-| | SUPIR | 0.2973 | **0.6078** |
-| | **Ours**| __**0.2400**__ | __**0.7497**__ |
-
 <table>
   <thead>
     <tr>
@@ -57,12 +33,12 @@ scores—and in structural integrity while achieving robust per-formance. In par
       <th colspan="3">CLIP-IQA ↑</th>
     </tr>
     <tr>
-      <th>RSC11</th>
-      <th>RSSCN7</th>
-      <th>WHU-RS19</th>
-      <th>RSC11</th>
-      <th>RSSCN7</th>
-      <th>WHU-RS19</th>
+      <th style="width:100px;">RSC11</th>
+      <th style="width:100px;">RSSCN7</th>
+      <th style="width:100px;">WHU-RS19</th>
+      <th style="width:100px;">RSC11</th>
+      <th style="width:100px;">RSSCN7</th>
+      <th style="width:100px;">WHU-RS19</th>
     </tr>
   </thead>
   <tbody>
@@ -83,23 +59,23 @@ scores—and in structural integrity while achieving robust per-formance. In par
     </tr>
     <tr>
       <td>SRDDPM</td>
-      <td>0.2438</td><td>0.2352</td><td><b>0.2325</b></td>
+      <td>0.2438</td><td>0.2352</td><td>0.2325</td>
       <td>0.5551</td><td>0.4971</td><td>0.5618</td>
     </tr>
     <tr>
       <td>SR3</td>
-      <td><b>0.2428</b></td><td><b>0.2317</b></td><td><b>0.2321</b></td>
-      <td>0.6035</td><td>0.5422</td><td>0.6068</td>
+      <td style="color: blue;"><b>0.2428</b></td><td style="color: red;"><b>0.2317</b></td><td style="color: red;"><b>0.2321</b></td>
+      <td>0.6035</td><td>0.5472</td><td>0.6068</td>
     </tr>
     <tr>
       <td>SUPIR</td>
       <td>0.2920</td><td>0.2714</td><td>0.2973</td>
-      <td><b>0.6360</b></td><td><b>0.6200</b></td><td><b>0.6078</b></td>
+      <td style="color: blue;"><b>0.6360</b></td><td style="color: blue;"><b>0.6200</b></td><td style="color: blue;"><b>0.6078</b></td>
     </tr>
     <tr>
       <td><b>Ours</b></td>
-      <td><b><u>0.2291</u></b></td><td><b><u>0.2337</u></b></td><td><b><u>0.2400</u></b></td>
-      <td><b><u>0.7842</u></b></td><td><b><u>0.7778</u></b></td><td><b><u>0.7497</u></b></td>
+      <td style="color: red;"><b><u>0.2291</u></b></td><td style="color: blue;"><b>0.2337</b></td><td style="color: blue;"><b>0.2400</b></td>
+      <td style="color: red;"><b><u>0.7842</u></b></td><td style="color: red;"><b><u>0.7778</u></b></td><td style="color: red;"><b><u>0.7497</u></b></td>
     </tr>
   </tbody>
 </table>
