@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # env : llama3_metrics
 # python3 infer_dir.py \
-#  --image_dir "/home/ict04/ocr_sr/KMK/GYLPH-SR/dataset/SR3_RSSCN7_28_224/results" \
+#  --image_dir "LR/dataset/dir" \
 #  --save_dir "./results"
+#  --upscale 8
 # coding: utf-8
 
 import argparse
@@ -31,7 +32,7 @@ from Texture_eval_mk import *
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Batch super-resolution and caption generation using LLAVA and SUPIR"
+        description="Batch super-resolution and caption generation"
     )
     parser.add_argument(
         "--image_dir",
@@ -46,10 +47,10 @@ def parse_args():
         help="Directory to save the output images (default: ./results)"
     )
     parser.add_argument(
-        "--supir_yaml",
+        "--model_yaml",
         type=str,
         default="./model_configs/juggernautXL.yaml",
-        help="Path to the SUPIR model configuration YAML file"
+        help="Path to the model configuration YAML file"
     )
     parser.add_argument(
         "--prompt_yaml",
@@ -85,37 +86,37 @@ def parse_args():
         "--s_stage1",
         type=int,
         default=-1,
-        help="Stage-1 restoration scale for SUPIR (default: -1)"
+        help="Stage-1 restoration scale (default: -1)"
     )
     parser.add_argument(
         "--s_churn",
         type=int,
         default=5,
-        help="Churn parameter for SUPIR (default: 5)"
+        help="Churn parameter (default: 5)"
     )
     parser.add_argument(
         "--s_noise",
         type=float,
         default=1.003,
-        help="Noise parameter for SUPIR (default: 1.003)"
+        help="Noise parameter (default: 1.003)"
     )
     parser.add_argument(
         "--s_cfg",
         type=float,
         default=7.5,
-        help="CFG scale parameter for SUPIR (default: 7.5)"
+        help="CFG scale parameter (default: 7.5)"
     )
     parser.add_argument(
         "--s_stage2",
         type=float,
         default=1.0,
-        help="Stage-2 control scale for SUPIR (default: 1.0)"
+        help="Stage-2 control scale (default: 1.0)"
     )
     parser.add_argument(
         "--num_steps",
         type=int,
         default=50,
-        help="Number of sampling steps for SUPIR (default: 50)"
+        help="Number of sampling steps (default: 50)"
     )
     parser.add_argument(
         "--num_samples",
@@ -200,8 +201,8 @@ def main():
     tokenizer, llava_model, image_processor = load_llava()
     llava_model.to(args.base_device)
 
-    # Load SUPIR model for super-resolution
-    SR_model = create_SR_model(args.supir_yaml, SUPIR_sign='Q')
+    # Load model for super-resolution
+    SR_model = create_SR_model(args.model_yaml, 'Q')
     SR_model.to(args.sr_device)
 
     # Gather list of image files in the input directory
@@ -250,7 +251,7 @@ def main():
             for _img in image_tensor
         ]
 
-        # Convert PIL image to low-resolution tensor for SUPIR
+        # Convert PIL image to low-resolution tensor
         LQ_img, h0, w0 = PIL2Tensor(
             sr_pil,
             upscale=1,
@@ -272,7 +273,7 @@ def main():
                 device=args.base_device
             )
 
-        # Perform super-resolution with SUPIR
+        # Perform super-resolution
         with torch.no_grad():
             samples = sample_function(
                 LQ_img,

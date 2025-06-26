@@ -9,7 +9,7 @@
         "tb_logger": "tb_logger",
         "results": "results",
         "checkpoint": "checkpoint",
-        "resume_state": "models/sr3_model/checkpoint/I1000000_E800"
+        "resume_state": "CKPT_PTH/I1000000_E800"
         // "resume_state": "experiments/sr_sr3_XXXXXX_XXXXXX/checkpoint/I1000000_E200" //pretrain model or training state
     },
     "datasets": {
