@@ -12,10 +12,10 @@ import yaml
 from PIL import Image
 from tqdm import tqdm
 
-from GLYPHSR.util import *
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
+from models.util import *
 from Texture_eval_mk import *
 
 
@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument(
         "--prompt_yaml",
         type=str,
-        default="/home/ict04/ocr_sr/KMK/GYLPH-SR/prompts/prompt_config.yaml",
+        default="./prompts/prompt_config.yaml",
         help="Path to the YAML file containing caption prompt settings"
     )
     parser.add_argument(

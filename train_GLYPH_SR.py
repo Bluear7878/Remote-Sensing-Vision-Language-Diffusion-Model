@@ -15,9 +15,9 @@ import torch
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
-from GLYPHSR.ControlNet import load_TS_ControlNet
-from GLYPHSR.dataloader import make_hqlq_dataloader
-from GLYPHSR.util import *
+from models.ControlNet import load_TS_ControlNet
+from models.dataloader import make_hqlq_dataloader
+from models.util import *
 from sgm.util import instantiate_from_config
 
 # Default device

@@ -17,13 +17,13 @@ from peft import PeftModel
 from PIL import Image
 from transformers import BitsAndBytesConfig
 
-from GLYPHSR.ControlNet import load_TS_ControlNet
-from GLYPHSR.OCR import generate_ocr_text, get_img_describe, get_text_position
-from GLYPHSR.util import PIL2Tensor, Tensor2PIL, degrade_image
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
 from llava.model.builder import load_pretrained_model
+from models.ControlNet import load_TS_ControlNet
+from models.OCR import generate_ocr_text, get_img_describe, get_text_position
+from models.util import PIL2Tensor, Tensor2PIL, degrade_image
 from sgm.util import instantiate_from_config
 
 # Default device assignments for different model components
@@ -34,7 +34,7 @@ VLM_CUDA = "cuda:2"
 @dataclass
 class Config:
     # Paths and I/O
-    img_path: str = "/home/delta1/Texture/GYLPH-SR/data_sample/83c09301d9bb9764_warm_color_tones.png"
+    img_path: str = "dataset/data_sample/airport_50_lr.png"
     save_dir: str = "./results"                # Output directory
     meta_filename: str = "metadata.jsonl"
     hq_meta_filename: str = "metadata_HQ.jsonl"
@@ -56,7 +56,7 @@ class Config:
     num_samples: int = 1
     down_factor: int = 1
     GYLPH_pretrained_ckpt: str = "/home/delta1/Texture/TEXIR/checkpoints/best/smg/cp2.ckpt"
-    VLM_pretrained_ckpt: str = "/home/delta1/TEXTURE-Diffusion-Based-Super-Resolution-Model-for-Enhanced-TEXT-Clarity/CKPT_PTH/Llava-next"
+    VLM_pretrained_ckpt: str = "./CKPT_PTH/Llava-next"
 
     # Prompts
     a_prompt: str = (
