@@ -99,10 +99,11 @@ Remote-Sensing-Vision-Language-Diffusion-Model/
 │   ├── SUPIR-v0Q.ckpt
 │   └── ...
 ├── README.md
-├── main.py
+├── infer.py
+├── infer_dir.py
 └── ...
 ```
-[Download pretrained_model.zip (Google Drive)](https://drive.google.com/uc?export=download&id=YOUR_FILE_ID)
+[Download pretrained_model.zip (Google Drive)](https://drive.google.com/file/d/1FQ_amk22yCM5_VEC0wQ6OLR6t7aBT0It/view?usp=drive_link)
 
 ## Inference
 
