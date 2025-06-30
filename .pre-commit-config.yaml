@@ -17,20 +17,20 @@ repos:
     rev: 5.13.2
     hooks:
       - id: isort
+        args: [--profile, black]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.2
     hooks:
       - id: ruff
         args: [--fixable=F401]
-        files: ^(nunchaku/|examples/|tests/|app/)
-        exclude: \.ipynb$ # .ipynb 파일은 ruff 검사에서 제외
+        files: ^(models/|examples/|tests/|app/)
+        exclude: \.ipynb$
   - repo: https://github.com/psf/black
     rev: 24.10.0
     hooks:
-      # 'black-jupyter' 훅을 제거하여 .ipynb 파일 포맷팅을 비활성화합니다.
       - id: black
         args: [-l, "120"]
-        files: ^(nunchaku/|examples/|tests/|app/)
+        files: ^(models/|examples/|tests/|app/)
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.22
     hooks:

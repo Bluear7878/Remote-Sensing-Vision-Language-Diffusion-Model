@@ -91,18 +91,20 @@ pip install -r requirements.txt
 ```
 
 ## Download and Setup
+
 ```
 Remote-Sensing-Vision-Language-Diffusion-Model/
 ├── CKPT_PTH/
 │   ├── Llava-next/
-│   ├── SUPIR-v0F.ckpt
-│   ├── SUPIR-v0Q.ckpt
+│   ├── v0F.ckpt
+│   ├── v0Q.ckpt
 │   └── ...
 ├── README.md
 ├── infer.py
 ├── infer_dir.py
 └── ...
 ```
+
 [Download pretrained_model.zip (Google Drive)](https://drive.google.com/file/d/1FQ_amk22yCM5_VEC0wQ6OLR6t7aBT0It/view?usp=drive_link)
 
 ## Inference
