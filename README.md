@@ -105,7 +105,7 @@ Remote-Sensing-Vision-Language-Diffusion-Model/
 └── ...
 ```
 
-[Download pretrained_model.zip (Google Drive)](https://drive.google.com/file/d/1FQ_amk22yCM5_VEC0wQ6OLR6t7aBT0It/view?usp=drive_link)
+[Download pretrained_model.zip (Google Drive)](https://drive.google.com/file/d/1OJ2wi75Ivdwtp8TjncQGpXjDqdwxVpL3/view?usp=sharing)
 
 ## Inference
 
