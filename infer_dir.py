@@ -13,7 +13,6 @@ from pathlib import Path
 import torch
 import yaml
 from PIL import Image
-from Texture_eval_mk import *
 from tqdm import tqdm
 
 import configs.sr3 as SR3
@@ -24,7 +23,6 @@ import utils.tensor2img as T2I
 from llava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from llava.conversation import conv_templates
 from llava.mm_utils import process_images
-from models.dataloader import *
 from models.util import *
 
 
@@ -117,7 +115,7 @@ class ImageBatchProcessor:
         self.llava_model.to(self.cfg.base_device)
 
         # 3. Refinement Model
-        self.refinement_model = create_SR_model(self.cfg.model_yaml, 'Q')
+        self.refinement_model = create_SR_model(self.cfg.model_yaml)
         self.refinement_model.to(self.cfg.sr_device)
 
         # 4. Prompt Template
@@ -135,7 +133,9 @@ class ImageBatchProcessor:
         self.sr3_diffusion.feed_data(next(iter(loader)))
         self.sr3_diffusion.test(continous=True)
 
-        sr_tensor = self.sr3_diffusion.SR.squeeze()
+        sr_tensor = self.sr3_diffusion.SR
+        if sr_tensor.dim() == 4:
+            sr_tensor = sr_tensor[-1]
         sr_img_np = T2I.tensor2img(sr_tensor, min_max=(-1, 1))
         sr_pil = Image.fromarray(sr_img_np)
 

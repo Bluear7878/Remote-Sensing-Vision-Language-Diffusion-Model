@@ -40,7 +40,6 @@ def parse(args):
     for key, path in opt['path'].items():
         if 'resume' not in key and 'experiments' not in key:
             opt['path'][key] = os.path.join(experiments_root, path)
-            mkdirs(opt['path'][key])
 
     # change dataset length limit
     opt['phase'] = phase
