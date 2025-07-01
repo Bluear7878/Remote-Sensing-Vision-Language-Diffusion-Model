@@ -150,7 +150,7 @@ model:
         jpeg artifacts, deformed, lowres, over-smooth'
 
 SR_CKPT: ./CKPT_PTH/juggernautXL_v8Rundiffusion.safetensors
-SR_CKPT_Q: ./CKPT_PTH/v0Q.ckpt
+SR_CKPT_Q: ./CKPT_PTH/SR-v0Q.ckpt
 
 default_setting:
   s_cfg_Quality: 7.5
