@@ -87,7 +87,11 @@ scores—and in structural integrity while achieving robust per-formance. In par
 ```sh
 conda create -n myenv python=3.10
 conda activate myenv
+# GPU stack ─ PyTorch 2.5.1 + CUDA 12.4
+# Check your CUDA version, then install
+conda install pytorch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 pytorch-cuda=12.4 -c pytorch -c nvidia
 pip install -r requirements.txt
+pip install flash-attn --no-build-isolation
 ```
 
 ## Download and Setup
