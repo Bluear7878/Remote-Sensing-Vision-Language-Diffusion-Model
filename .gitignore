@@ -5,3 +5,10 @@ results/
 experiments/
 checkpoint/
 CKPT_PTH/
+generate_SR_time.py
+generate_meta.py
+infer_dir_time.py
+requirements_pre.txt
+run_auto.py
+run_auto2.py
+run_auto3.py
