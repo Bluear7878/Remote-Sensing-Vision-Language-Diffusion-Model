@@ -1,5 +1,8 @@
 # A Novel VLM-Guided Diffusion Model for Remote Sensing Image Super-Resolution
 
+## Paper
+[A Novel VLM-Guided Diffusion Model for Remote Sensing Image Super-Resolution (IEEE GRSL Early Access)](https://ieeexplore.ieee.org/document/11155158)
+
 ## Abstract
 
 Abstract—Super-resolution (SR) of remote sensing imagery based on generative AI models is vital for practical applications
